@@ -1,4 +1,4 @@
-
+package org.ilastik;
 
 import ncsa.hdf.hdf5lib.exceptions.HDF5Exception;
 import ch.systemsx.cisd.base.mdarray.MDAbstractArray;
@@ -328,8 +328,10 @@ public class ilastik_export implements PlugInFilter {
 		new ImageJ();
 
 		// open the Clown sample
-		ImagePlus image = IJ.openImage("/Users/jmassa/Documents/ilastik/datasets/3D_LargeWhirl.tif");
+//		ImagePlus image = IJ.openImage("/Users/jmassa/Documents/ilastik/datasets/3D_LargeWhirl.tif");
 //		ImagePlus image = IJ.openImage("/Users/jmassa/Documents/MaMut_project/rapoport/raw.tif");
+//		ImagePlus image = IJ.openImage("/Users/jmassa/Documents/MaMut_project/drosophila/ilastik_export/Raw_Data_0_10.tif");
+		ImagePlus image = IJ.openImage("/Users/chaubold/hci/data/virginie/Number3/MI_Substack (1-170).tif");
 		image.show();
 
 		// run the plugin

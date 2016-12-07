@@ -1,3 +1,4 @@
+package org.ilastik;
 
 import java.io.File;
 import java.util.ArrayList;

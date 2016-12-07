@@ -16,6 +16,7 @@ import ij.gui.GenericDialog;
 import ij.io.OpenDialog;
 import ij.io.SaveDialog;
 import ij.plugin.filter.PlugInFilter;
+import ij.process.ColorProcessor;
 import ij.process.ImageProcessor;
 import ij.plugin.*;
 
@@ -138,13 +139,12 @@ public class ilastik_export implements PlugInFilter {
 		        }	
 		        
 		            System.arraycopy(flatArray, 0, flatArray2, 0, flatArray.length);
-			        int[] index = new int[4];
-		            for (index[3]=0; index[3]<nFrames; index[3]++) {
-		                for (index[2]=0; index[2]<nLevs; index[2]++) {
-		                    for (index[1]=0; index[1]<nRows; index[1]++) {
-		                    	for (index[0]=0; index[0]<nCols; index[0]++) {
-		                    		int scrIndex = index[0] + index[1]*nCols + index[2]*nCols*nRows + index[3]*nCols*nRows*nLevs;
-		                    		int destIndex =  index[2] + index[1]*nLevs + index[0]*nLevs*nRows + index[3]*nLevs*nCols*nRows;
+		            for (int t=0; t<nFrames; t++) {
+		                for (int z=0; z<nLevs; z++) {
+		                    for (int y=0; y<nRows; y++) {
+		                    	for (int x=0; x<nCols; x++) {
+		                    		int scrIndex = x + y*nCols + z*nCols*nRows + t*nCols*nRows*nLevs;
+		                    		int destIndex =  z + y*nLevs + x*nLevs*nRows + t*nLevs*nCols*nRows;
 		                    		flatArray[destIndex] = flatArray2[scrIndex];
 		                    	}
 		                    }
@@ -174,15 +174,13 @@ public class ilastik_export implements PlugInFilter {
 
 	        	}
 	            System.arraycopy(flatArray, 0, flatArray2, 0, flatArray.length);
-		        int[] index = new int[4];
-	            for (index[3]=0; index[3]<nFrames; index[3]++) {
-	                for (index[2]=0; index[2]<nLevs; index[2]++) {
-	                    for (index[1]=0; index[1]<nRows; index[1]++) {
-	                    	for (index[0]=0; index[0]<nCols; index[0]++) {
-	                    		int scrIndex = index[0] + index[1]*nCols + index[2]*nCols*nRows + index[3]*nCols*nRows*nLevs;
-	                    		int destIndex =  index[2] + index[1]*nLevs + index[0]*nLevs*nRows + index[3]*nLevs*nCols*nRows;
+	            for (int t=0; t<nFrames; t++) {
+	                for (int z=0; z<nLevs; z++) {
+	                    for (int y=0; y<nRows; y++) {
+	                    	for (int x=0; x<nCols; x++) {
+	                    		int scrIndex = x + y*nCols + z*nCols*nRows + t*nCols*nRows*nLevs;
+	                    		int destIndex =  z + y*nLevs + x*nLevs*nRows + t*nLevs*nCols*nRows;
 	                    		flatArray[destIndex] = flatArray2[scrIndex];
-	                    		
 	                    	}
 	                    }
 	                }
@@ -209,15 +207,13 @@ public class ilastik_export implements PlugInFilter {
                		     flatArray, (i-1)*(nRows*nCols), slizeSize);
 	        	}
 	            System.arraycopy(flatArray, 0, flatArray2, 0, flatArray.length);
-		        int[] index = new int[4];
-	            for (index[3]=0; index[3]<nFrames; index[3]++) {
-	                for (index[2]=0; index[2]<nLevs; index[2]++) {
-	                    for (index[1]=0; index[1]<nRows; index[1]++) {
-	                    	for (index[0]=0; index[0]<nCols; index[0]++) {
-	                    		int scrIndex = index[0] + index[1]*nCols + index[2]*nCols*nRows + index[3]*nCols*nRows*nLevs;
-	                    		int destIndex =  index[2] + index[1]*nLevs + index[0]*nLevs*nRows + index[3]*nLevs*nCols*nRows;
+	            for (int t=0; t<nFrames; t++) {
+	                for (int z=0; z<nLevs; z++) {
+	                    for (int y=0; y<nRows; y++) {
+	                    	for (int x=0; x<nCols; x++) {
+	                    		int scrIndex = x + y*nCols + z*nCols*nRows + t*nCols*nRows*nLevs;
+	                    		int destIndex =  z + y*nLevs + x*nLevs*nRows + t*nLevs*nCols*nRows;
 	                    		flatArray[destIndex] = flatArray2[scrIndex];
-	                    		
 	                    	}
 	                    }
 	                }
@@ -228,56 +224,73 @@ public class ilastik_export implements PlugInFilter {
 	        	IJ.log("DONE");	
             } 
 	        else if (imgColorType == ImagePlus.COLOR_RGB){
+	        	
+	        	IJ.log("RGB");
+	        	IJ.log(String.valueOf(nFrames));
+
+	        	long[] channelDimsRGB = null;
 		        if (nLevs > 1) 
 		        {
-		          
-		          channelDims[0] = nFrames; //t
-		          channelDims[2] = nRows; //y
-		          channelDims[1] = nCols; //x
-		          channelDims[3] = nLevs ; //z
-		          channelDims[4] = 3;
+		          channelDimsRGB = new long[5];
+		          channelDimsRGB[0] = nFrames; //t
+		          channelDimsRGB[1] = nCols; //x
+		          channelDimsRGB[2] = nRows; //y
+		          channelDimsRGB[3] = nLevs ; //z
+		          channelDimsRGB[4] = 3;
 		        } 
 		        else 
 		        {
-		          channelDims[0] = nFrames; //t
-		          channelDims[1] = nCols; //x
-		          channelDims[2] = nRows; //y
-		          channelDims[3] = 1 ;
-		          channelDims[4] = 3;
-		            
-		          byte[] pixels = null;
-		        	
+		          channelDimsRGB = new long[5];
+		          channelDimsRGB[0] = nFrames; //t
+		          channelDimsRGB[1] = nCols; //x
+		          channelDimsRGB[2] = nRows; //y
+		          channelDimsRGB[3] = 1 ;
+		          channelDimsRGB[4] = 3;
+		        }
+		            	
 		          stack = image.getStack();
 
-		          MDByteArray arr = new MDByteArray( channelDims);		    
+		          MDByteArray arr = new MDByteArray(channelDimsRGB);		    
 		          byte[] flatArray = arr.getAsFlatArray();
 		          byte[] flatArray2 = new byte[flatArray.length];
-	          	
-			      for (int i=1;i<=stack.getSize();i++){ // stack size: levels*t 500
-			        	pixels = (byte[]) stack.getPixels(i); 
-			       
-			            System.arraycopy(pixels, 0,
-			                		     flatArray, (i-1)*slizeSize, slizeSize);
-			            	 		
-			        }	
+		         
 			        
-			            System.arraycopy(flatArray, 0, flatArray2, 0, flatArray.length);
-				        int[] index = new int[4];
-			            for (index[3]=0; index[3]<nFrames; index[3]++) {
-			                for (index[2]=0; index[2]<nLevs; index[2]++) {
-			                    for (index[1]=0; index[1]<nRows; index[1]++) {
-			                    	for (index[0]=0; index[0]<nCols; index[0]++) {
-			                    		int scrIndex = index[0] + index[1]*nCols + index[2]*nCols*nRows + index[3]*nCols*nRows*nLevs;
-			                    		int destIndex =  index[2] + index[1]*nLevs + index[0]*nLevs*nRows + index[3]*nLevs*nCols*nRows;
-			                    		flatArray[destIndex] = flatArray2[scrIndex];
-			                    	}
-			                    }
+			       System.arraycopy(flatArray, 0, flatArray2, 0, flatArray.length);
+			            for (int t=0; t<nFrames; t++) {
+			                for (int z=0; z<nLevs; z++) {
+			                	for (int c=0; c<3; c++){
+
+		                            int stackIndex = image.getStackIndex(1, z + 1, t + 1);
+		          	              	ColorProcessor cp = (ColorProcessor)(stack.getProcessor(stackIndex));
+		          	              	byte[] red   = cp.getChannel(1);
+		          	              	byte[] green = cp.getChannel(2);
+		          	              	byte[] blue  = cp.getChannel(3);
+		          	              	
+		          	                
+			                		for (int y=0; y<nRows; y++) {
+			                			for (int x=0; x<nCols; x++) {
+			                				int scrIndex = x + y*nCols;// + c*nCols*nRows + z*nCols*nRows*nChannels + t*nCols*nRows*nLevs*nChannels;
+//			                				int scrIndex2 = x + y*nCols + c*nCols*nRows + z*nCols*nRows*nChannels + t*nCols*nRows*nLevs*nChannels;
+			                				int destIndex = z*3 + y*nLevs*3 + x*nLevs*nRows*3 + t*nLevs*nCols*nRows*3;
+//			                				int destIndex2 =  c + z*nChannels + y*nLevs*nChannels + x*nLevs*nRows*nChannels + t*nLevs*nCols*nRows*nChannels;
+//			                				flatArray[destIndex] = flatArray2[scrIndex2];
+			                				flatArray[destIndex+0] = red[scrIndex];
+			                				flatArray[destIndex+1] = green[scrIndex];
+			                				flatArray[destIndex+2] = blue[scrIndex];
+			                				
+			                			}
+			                		}
+			                	}	
 			                }
 			            }
+			            IJ.log("write RGB");
+			            writer.uint8().writeMDArray( "export_data", arr, HDF5IntStorageFeatures.createDeflationDelete(compressionLevel));
+			        	IJ.log("compressionLevel: " + String.valueOf(compressionLevel));
+			        	IJ.log("DONE");	
 		        
 		        }
 	        	
-	        }
+	        
 	        writer.close();
 
 	      }
@@ -327,10 +340,10 @@ public class ilastik_export implements PlugInFilter {
 		new ImageJ();
 
 		// open the Clown sample
-//		ImagePlus image = IJ.openImage("/Users/jmassa/Documents/ilastik/datasets/3D_LargeWhirl.tif");
+		ImagePlus image = IJ.openImage("/Users/jmassa/Documents/ilastik/datasets/3D_LargeWhirl.tif");
 //		ImagePlus image = IJ.openImage("/Users/jmassa/Documents/MaMut_project/rapoport/raw.tif");
 //		ImagePlus image = IJ.openImage("/Users/jmassa/Documents/MaMut_project/drosophila/ilastik_export/Raw_Data_0_10.tif");
-		ImagePlus image = IJ.openImage("/Users/chaubold/hci/data/virginie/Number3/MI_Substack (1-170).tif");
+//		ImagePlus image = IJ.openImage("/Users/chaubold/hci/data/virginie/Number3/MI_Substack (1-170).tif");
 		image.show();
 
 		// run the plugin

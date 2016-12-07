@@ -153,9 +153,10 @@ public class ilastik_export implements PlugInFilter {
 		                }
 		            }
 
+		        IJ.log("write uint8 hdf5");
 	        	writer.uint8().writeMDArray( "export_data", arr, HDF5IntStorageFeatures.createDeflationDelete(compressionLevel));
 	        	IJ.log("compressionLevel: " + String.valueOf(compressionLevel));
-	        	IJ.log("write uint8 hdf5");
+	        	IJ.log("DONE");
 	        }
 
 	        else if (imgColorType == ImagePlus.GRAY16) 
@@ -188,9 +189,10 @@ public class ilastik_export implements PlugInFilter {
 	                    }
 	                }
 	            }
+	            IJ.log("write uint16 hdf5");
 	        	writer.uint16().writeMDArray( "export_data", arr, HDF5IntStorageFeatures.createDeflationDelete(compressionLevel));
 	        	IJ.log("compressionLevel: " + String.valueOf(compressionLevel));
-	        	IJ.log("write uint16 hdf5");
+	        	IJ.log("DONE");
             }
 	        else if (imgColorType == ImagePlus.GRAY32)
             {
@@ -222,10 +224,62 @@ public class ilastik_export implements PlugInFilter {
 	                    }
 	                }
 	            }
+	            IJ.log("write float32 hdf5");
 	        	writer.float32().writeMDArray( "export_data", arr, HDF5FloatStorageFeatures.createDeflationDelete(compressionLevel));
 	        	IJ.log("compressionLevel: " + String.valueOf(compressionLevel));
-	        	IJ.log("write float32 hdf5");	
+	        	IJ.log("DONE");	
             } 
+	        else if (imgColorType == ImagePlus.COLOR_RGB){
+		        if (nLevs > 1) 
+		        {
+		          
+		          channelDims[0] = nFrames; //t
+		          channelDims[2] = nRows; //y
+		          channelDims[1] = nCols; //x
+		          channelDims[3] = nLevs ; //z
+		          channelDims[4] = 3;
+		        } 
+		        else 
+		        {
+		          channelDims[0] = nFrames; //t
+		          channelDims[1] = nCols; //x
+		          channelDims[2] = nRows; //y
+		          channelDims[3] = 1 ;
+		          channelDims[4] = 3;
+		            
+		          byte[] pixels = null;
+		        	
+		          stack = image.getStack();
+
+		          MDByteArray arr = new MDByteArray( channelDims);		    
+		          byte[] flatArray = arr.getAsFlatArray();
+		          byte[] flatArray2 = new byte[flatArray.length];
+	          	
+			      for (int i=1;i<=stack.getSize();i++){ // stack size: levels*t 500
+			        	pixels = (byte[]) stack.getPixels(i); 
+			       
+			            System.arraycopy(pixels, 0,
+			                		     flatArray, (i-1)*slizeSize, slizeSize);
+			            	 		
+			        }	
+			        
+			            System.arraycopy(flatArray, 0, flatArray2, 0, flatArray.length);
+				        int[] index = new int[4];
+			            for (index[3]=0; index[3]<nFrames; index[3]++) {
+			                for (index[2]=0; index[2]<nLevs; index[2]++) {
+			                    for (index[1]=0; index[1]<nRows; index[1]++) {
+			                    	for (index[0]=0; index[0]<nCols; index[0]++) {
+			                    		int scrIndex = index[0] + index[1]*nCols + index[2]*nCols*nRows + index[3]*nCols*nRows*nLevs;
+			                    		int destIndex =  index[2] + index[1]*nLevs + index[0]*nLevs*nRows + index[3]*nLevs*nCols*nRows;
+			                    		flatArray[destIndex] = flatArray2[scrIndex];
+			                    	}
+			                    }
+			                }
+			            }
+		        
+		        }
+	        	
+	        }
 	        writer.close();
 
 	      }
@@ -274,8 +328,8 @@ public class ilastik_export implements PlugInFilter {
 		new ImageJ();
 
 		// open the Clown sample
-//		ImagePlus image = IJ.openImage("/Users/jmassa/Documents/MaMut_project/drosophila/ilastik_export/Raw_Data_0_10.tif");
-		ImagePlus image = IJ.openImage("/Users/jmassa/Documents/MaMut_project/rapoport/raw.tif");
+		ImagePlus image = IJ.openImage("/Users/jmassa/Documents/ilastik/datasets/3D_LargeWhirl.tif");
+//		ImagePlus image = IJ.openImage("/Users/jmassa/Documents/MaMut_project/rapoport/raw.tif");
 		image.show();
 
 		// run the plugin

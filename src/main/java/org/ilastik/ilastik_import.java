@@ -255,7 +255,7 @@ public static void main(String[] args) {
 	// set the plugins.dir property to make the plugin appear in the Plugins menu
 	Class<?> clazz = ilastik_import.class;
 	String url = clazz.getResource("/" + clazz.getName().replace('.', '/') + ".class").toString();
-	String pluginsDir = url.substring("file:".length(), url.length() - clazz.getName().length() - ".class".length());
+	String pluginsDir = url.substring("file:".length(), url.length() - clazz.getName().length() - ".class".length()) + "org/ilastik/";
 	System.setProperty("plugins.dir", pluginsDir);
 
 	// start ImageJ

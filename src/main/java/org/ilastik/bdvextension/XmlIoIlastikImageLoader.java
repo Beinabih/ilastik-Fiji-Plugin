@@ -32,14 +32,22 @@ package org.ilastik.bdvextension;
 import static mpicbg.spim.data.XmlHelpers.loadPath;
 
 import java.io.File;
+import java.io.IOException;
 
 import org.jdom2.Element;
 
+import ch.systemsx.cisd.hdf5.HDF5DataClass;
+import ch.systemsx.cisd.hdf5.HDF5DataSetInformation;
+import ch.systemsx.cisd.hdf5.HDF5DataTypeInformation;
+import ch.systemsx.cisd.hdf5.HDF5Factory;
+import ch.systemsx.cisd.hdf5.IHDF5Reader;
+import ij.IJ;
 import mpicbg.spim.data.XmlHelpers;
 import mpicbg.spim.data.generic.sequence.AbstractSequenceDescription;
 import mpicbg.spim.data.generic.sequence.ImgLoaderIo;
 import mpicbg.spim.data.generic.sequence.XmlIoBasicImgLoader;
 
+@SuppressWarnings( { "rawtypes", "unchecked" } ) // TODO: when ij2 supports java 7, replace SuppressWarnings by new ImarisImageLoader<>(...)
 @ImgLoaderIo( format = "ilastik.hdf5", type = Hdf5IlastikImageLoader.class )
 public class XmlIoIlastikImageLoader implements XmlIoBasicImgLoader< Hdf5IlastikImageLoader >
 {
@@ -48,13 +56,51 @@ public class XmlIoIlastikImageLoader implements XmlIoBasicImgLoader< Hdf5Ilastik
 	{
 		return null;
 	}
+	
+	public DataTypes.DataType<?,?,?> determineDatasetDatatype(final File hdf5File, final String dataset) throws IOException
+	{
+		IHDF5Reader reader = HDF5Factory.openForReading( hdf5File );
+		final HDF5DataSetInformation info = reader.getDataSetInformation( dataset );
+		final HDF5DataTypeInformation ti = info.getTypeInformation();
+
+		if ( ti.getDataClass().equals( HDF5DataClass.INTEGER ) )
+		{
+			switch ( ti.getElementSize() )
+			{
+			case 1:
+				return DataTypes.UnsignedByte;
+			case 2:
+				return DataTypes.UnsignedShort;
+			default:
+				throw new IOException( "expected datatype" + ti );
+			}
+		}
+		else if ( ti.getDataClass().equals( HDF5DataClass.FLOAT ) )
+		{
+			switch ( ti.getElementSize() )
+			{
+			case 4:
+				return DataTypes.Float;
+			default:
+				throw new IOException( "expected datatype" + ti );
+			}
+		}
+		return null;
+	}
 
 	@Override
 	public Hdf5IlastikImageLoader fromXml( final Element elem, final File basePath, final AbstractSequenceDescription< ?, ?, ? > sequenceDescription )
 	{
-		System.out.println("Using ilastik hdf5 loader!");
 		final String path = loadPath( elem, "hdf5", basePath ).toString();
 		final String dataset = XmlHelpers.getText(elem, "dataset");
-		return new Hdf5IlastikImageLoader( new File( path ), dataset );
+		try{
+			DataTypes.DataType<?,?,?> dataType = determineDatasetDatatype(new File( path ), dataset);
+			return new Hdf5IlastikImageLoader( new File( path ), dataset, dataType );
+		}
+		catch( final IOException e )
+		{
+			IJ.log("Was not able to determine dataset type of dataset \"" + dataset + "\" in \"" + path + "\"");
+			return null;
+		}
 	}
 }

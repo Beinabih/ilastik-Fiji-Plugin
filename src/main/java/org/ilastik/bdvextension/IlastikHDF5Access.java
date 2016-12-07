@@ -90,15 +90,38 @@ class IlastikHDF5Access implements IIlastikHDF5Access
 	{
 		return getDimsAndExistence();
 	}
+	
+	private int[] get5DimsFrom3Dims(final int[] dimensions)
+	{
+		return new int[]{1, reorderedDimensions[0], reorderedDimensions[1], reorderedDimensions[2], 1};
+	}
+	
+	private long[] get5DMinsFrom3Mins(final long min[], final int timepoint, final int setup)
+	{
+		int clampedTimepoint = timepoint;
+		if(timepoint >= this.numTimesteps)
+			clampedTimepoint = (int)this.numTimesteps - 1;
+		else if(timepoint < 0)
+			clampedTimepoint = 0;
+		
+		int clampedSetup = setup;
+		if(setup >= this.numChannels)
+			clampedSetup = (int)this.numChannels - 1;
+		else if(setup < 0)
+			clampedSetup = 0;
+		
+		return new long[]{clampedTimepoint, reorderedMin[0], reorderedMin[1], reorderedMin[2], clampedSetup};
+	}
 
 	@Override
 	public synchronized short[] readShortMDArrayBlockWithOffset( final int timepoint, final int setup, final int level, final int[] dimensions, final long[] min ) throws InterruptedException
 	{
 		if ( Thread.interrupted() )
 			throw new InterruptedException();
+		
 		Util.reorder( dimensions, reorderedDimensions );
 		Util.reorder( min, reorderedMin );
-		final MDShortArray array = hdf5Reader.int16().readMDArrayBlockWithOffset( Util.getCellsPath( timepoint, setup, level ), reorderedDimensions, reorderedMin );
+		final MDShortArray array = hdf5Reader.uint16().readMDArrayBlockWithOffset( this.dataset, get5DimsFrom3Dims(reorderedDimensions), get5DMinsFrom3Mins(reorderedMin, timepoint, setup) );
 		return array.getAsFlatArray();
 	}
 
@@ -117,9 +140,7 @@ class IlastikHDF5Access implements IIlastikHDF5Access
 		
 		Util.reorder( dimensions, reorderedDimensions );
 		Util.reorder( min, reorderedMin );
-		int[] all5Dimensions = new int[]{1, reorderedDimensions[0], reorderedDimensions[1], reorderedDimensions[2], 1};
-		long[] all5Min = new long[]{timepoint, reorderedMin[0], reorderedMin[1], reorderedMin[2], setup};
-		final MDByteArray array = hdf5Reader.uint8().readMDArrayBlockWithOffset( this.dataset, all5Dimensions, all5Min );
+		final MDByteArray array = hdf5Reader.uint8().readMDArrayBlockWithOffset( this.dataset, get5DimsFrom3Dims(reorderedDimensions), get5DMinsFrom3Mins(reorderedMin, timepoint, setup) );
 		return array.getAsFlatArray();
 	}
 
@@ -129,26 +150,25 @@ class IlastikHDF5Access implements IIlastikHDF5Access
 		System.arraycopy( readByteMDArrayBlockWithOffset( timepoint, setup, level, dimensions, min ), 0, dataBlock, 0, dataBlock.length );
 		return dataBlock;
 	}
+	
+	@Override
+	public synchronized float[] readFloatMDArrayBlockWithOffset( final int timepoint, final int setup, final int level, final int[] dimensions, final long[] min ) throws InterruptedException
+	{
+		if ( Thread.interrupted() )
+			throw new InterruptedException();
+		
+		Util.reorder( dimensions, reorderedDimensions );
+		Util.reorder( min, reorderedMin );
+		final MDFloatArray array = hdf5Reader.float32().readMDArrayBlockWithOffset( this.dataset, get5DimsFrom3Dims(reorderedDimensions), get5DMinsFrom3Mins(reorderedMin, timepoint, setup) );
+		return array.getAsFlatArray();
+	}
 
-//	@Override
-//	public float[] readShortMDArrayBlockWithOffsetAsFloat( final int timepoint, final int setup, final int level, final int[] dimensions, final long[] min ) throws InterruptedException
-//	{
-//		if ( Thread.interrupted() )
-//			throw new InterruptedException();
-//		Util.reorder( dimensions, reorderedDimensions );
-//		Util.reorder( min, reorderedMin );
-//		final MDFloatArray array = hdf5Reader.float32().readMDArrayBlockWithOffset( Util.getCellsPath( timepoint, setup, level ), reorderedDimensions, reorderedMin );
-//		final float[] pixels = array.getAsFlatArray();
-//		unsignedShort( pixels );
-//		return pixels;
-//	}
-//
-//	@Override
-//	public float[] readShortMDArrayBlockWithOffsetAsFloat( final int timepoint, final int setup, final int level, final int[] dimensions, final long[] min, final float[] dataBlock ) throws InterruptedException
-//	{
-//		System.arraycopy( readShortMDArrayBlockWithOffsetAsFloat( timepoint, setup, level, dimensions, min ), 0, dataBlock, 0, dataBlock.length );
-//		return dataBlock;
-//	}
+	@Override
+	public synchronized float[] readFloatMDArrayBlockWithOffset( final int timepoint, final int setup, final int level, final int[] dimensions, final long[] min, final float[] dataBlock ) throws InterruptedException
+	{
+		System.arraycopy( readShortMDArrayBlockWithOffset( timepoint, setup, level, dimensions, min ), 0, dataBlock, 0, dataBlock.length );
+		return dataBlock;
+	}
 
 	@Override
 	public void closeAllDataSets()
@@ -160,10 +180,4 @@ class IlastikHDF5Access implements IIlastikHDF5Access
 		closeAllDataSets();
 		hdf5Reader.close();
 	}
-
-//	protected static final void unsignedShort( final float[] pixels )
-//	{
-//		for ( int j = 0; j < pixels.length; ++j )
-//			pixels[ j ] = ((short)pixels[ j ]) & 0xffff;
-//	}
 }

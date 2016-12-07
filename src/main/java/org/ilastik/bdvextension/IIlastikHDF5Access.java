@@ -44,6 +44,11 @@ interface IIlastikHDF5Access
 
 	public byte[] readByteMDArrayBlockWithOffset( final int timepoint, final int setup, final int level, final int[] dimensions, final long[] min, final byte[] dataBlock ) throws InterruptedException;
 
+	public float[] readFloatMDArrayBlockWithOffset( final int timepoint, final int setup, final int level, final int[] dimensions, final long[] min ) throws InterruptedException;
+
+	public float[] readFloatMDArrayBlockWithOffset( final int timepoint, final int setup, final int level, final int[] dimensions, final long[] min, final float[] dataBlock ) throws InterruptedException;
+
+	
 	public void closeAllDataSets();
 
 	public void close();

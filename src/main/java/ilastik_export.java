@@ -82,12 +82,9 @@ public class ilastik_export implements PlugInFilter {
 	      int nRows     = image.getHeight();
 	      int nCols     = image.getWidth();
 	      int slizeSize = nRows*nCols;
-
-	      IJ.log("nFrames" + String.valueOf(nFrames));
-	      IJ.log("nChannels" + String.valueOf(nChannels));
-	      IJ.log("nLevs" + String.valueOf(nLevs));
-	      IJ.log("nRows" + String.valueOf(nRows));
-	      IJ.log("nCols" + String.valueOf(nCols));
+	      
+			IJ.log("Export Dimensions: " + String.valueOf(nFrames) + "x" + String.valueOf(nCols) + "x" 
+					+ String.valueOf(nRows) + "x" + String.valueOf(nLevs) + "x" + String.valueOf(nChannels));
 	      
 	      try
 	      {
@@ -115,8 +112,6 @@ public class ilastik_export implements PlugInFilter {
 	        
 	        }
 	        int imgColorType = image.getType();
-	        IJ.log(String.valueOf(imgColorType));
-	        
 	        
 	        if (imgColorType == ImagePlus.GRAY8 
 	                || imgColorType == ImagePlus.COLOR_256 ) 
@@ -340,8 +335,8 @@ public class ilastik_export implements PlugInFilter {
 
 		// open the Clown sample
 //		ImagePlus image = IJ.openImage("/Users/jmassa/Documents/ilastik/datasets/3D_LargeWhirl.tif");
-		ImagePlus image = IJ.openImage("/Users/jmassa/Documents/MaMut_project/rapoport/raw.tif");
-//		ImagePlus image = IJ.openImage("/Users/jmassa/Documents/MaMut_project/drosophila/ilastik_export/Raw_Data_0_10.tif");
+//		ImagePlus image = IJ.openImage("/Users/jmassa/Documents/MaMut_project/rapoport/raw.tif");
+		ImagePlus image = IJ.openImage("/Users/jmassa/Documents/MaMut_project/drosophila/ilastik_export/Raw_Data_0_10.tif");
 //		ImagePlus image = IJ.openImage("/Users/chaubold/hci/data/virginie/Number3/MI_Substack (1-170).tif");
 		image.show();
 

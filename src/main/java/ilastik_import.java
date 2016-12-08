@@ -110,7 +110,7 @@ public class ilastik_import implements PlugIn {
 
 		for (HDF5LinkInformation info : members)
 		{
-			IJ.log(info.getPath() + ":" + info.getType());
+			IJ.log(info.getPath() + ": " + info.getType());
 			switch (info.getType())
 			{
 			case DATASET:
@@ -123,7 +123,6 @@ public class ilastik_import implements PlugIn {
 
 					//	              get type information
 					String typeText = getInfo(dsInfo);
-					IJ.log(" Type " + typeText);
 
 					if (rank == 5) {
 						nFrames = (int)dsInfo.getDimensions()[0];
@@ -131,14 +130,17 @@ public class ilastik_import implements PlugIn {
 						nRows = (int)dsInfo.getDimensions()[2];
 						nLevels = (int)dsInfo.getDimensions()[3];
 						nChannels = (int)dsInfo.getDimensions()[4];   
-						IJ.log("nFrames" + String.valueOf(nFrames) + "nLevs" + String.valueOf(nLevels));
+						IJ.log("Dimensions: " + String.valueOf(nFrames) + "x" + String.valueOf(nCols) + "x" 
+								+ String.valueOf(nRows) + "x" + String.valueOf(nLevels) + "x" + String.valueOf(nChannels));
 					} else {
 						IJ.error(" the data should have 5 dimensions");
 					}
 					int sliceSize = nCols * nRows;
 
 					if (typeText.equals( "uint8") && isRGB == false) {
-
+						
+						IJ.log("Bit-depth: " + String.valueOf(typeText));
+						IJ.log("Loading Data");
 						MDByteArray rawdata = reader.uint8().readMDArray(info.getName());
 						byte[] flat_data = rawdata.getAsFlatArray();
 						//						byte[] flat_data2 = new byte[flat_data.length];
@@ -169,7 +171,8 @@ public class ilastik_import implements PlugIn {
 
 					} else if (typeText.equals("uint16")){
 
-						IJ.log("Bit-depth: 16bit");
+						IJ.log("Bit-depth: " + String.valueOf(typeText));
+						IJ.log("Loading Data");
 						MDShortArray rawdata = reader.uint16().readMDArray(info.getName());
 						short[] flat_data = rawdata.getAsFlatArray();
 
@@ -202,7 +205,8 @@ public class ilastik_import implements PlugIn {
 
 					} else if (typeText.equals("int16")){
 
-						IJ.log("Bit-depth: 16bit");
+						IJ.log("Bit-depth: " + String.valueOf(typeText));
+						IJ.log("Loading Data");
 						MDShortArray rawdata = reader.int16().readMDArray(info.getName());
 						short[] flat_data = rawdata.getAsFlatArray();
 
@@ -235,6 +239,7 @@ public class ilastik_import implements PlugIn {
 	            } else if (typeText.equals("float32") || typeText.equals("float64") ) {
 	            	
 					IJ.log("Bit-depth: " + String.valueOf(typeText));
+					IJ.log("Loading Data");
 					MDFloatArray rawdata = reader.float32().readMDArray(info.getName());
 					float[] flat_data = rawdata.getAsFlatArray();
 
@@ -284,7 +289,6 @@ public class ilastik_import implements PlugIn {
 
 		}
 	}
-
 
 	static String getInfo(HDF5DataSetInformation dsInfo){
 

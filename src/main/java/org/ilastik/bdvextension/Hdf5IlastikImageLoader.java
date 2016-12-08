@@ -18,7 +18,6 @@ import bdv.img.hdf5.DimsAndExistence;
 import bdv.img.hdf5.Hdf5ImageLoader;
 import ch.systemsx.cisd.hdf5.HDF5Factory;
 import ch.systemsx.cisd.hdf5.IHDF5Reader;
-import ij.IJ;
 import mpicbg.spim.data.generic.sequence.ImgLoaderHint;
 import net.imglib2.RandomAccessibleInterval;
 import net.imglib2.Volatile;
@@ -72,7 +71,6 @@ public class Hdf5IlastikImageLoader<T extends NativeType< T >, V extends Volatil
 		try
 		{
 			this.hdf5Access = new IlastikHDF5AccessHack( hdf5Reader, dataset );
-			IJ.log("Using access hack!");
 		}
 		catch ( final Exception e )
 		{

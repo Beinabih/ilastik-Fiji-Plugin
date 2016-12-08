@@ -61,8 +61,8 @@ class IlastikHDF5Access implements IIlastikHDF5Access
 		this.dataset = dataset;
 		
 		long[] dimensions = extract5Dimensions();
-		IJ.log("Found dataset of size [" + String.valueOf(dimensions[0]) + ", " + String.valueOf(dimensions[1]) 
-		   + ", " + String.valueOf(dimensions[2]) + ", " + String.valueOf(dimensions[3]) + ", " + String.valueOf(dimensions[4]) + ", ");
+//		IJ.log("Found dataset of size [" + String.valueOf(dimensions[0]) + ", " + String.valueOf(dimensions[1]) 
+//		   + ", " + String.valueOf(dimensions[2]) + ", " + String.valueOf(dimensions[3]) + ", " + String.valueOf(dimensions[4]) + ", ");
 		if( dimensions != null )
 		{
 			this.numTimesteps = dimensions[0];

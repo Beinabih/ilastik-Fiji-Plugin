@@ -13,11 +13,10 @@
 	</parent>
 
 	<groupId>sc.fiji</groupId>
-	<artifactId>HDF5export_</artifactId>
-	<version>0.1.0-SNAPSHOT</version>
+	<artifactId>ilastik_HDF5</artifactId>
+	<version>0.1.0</version>
 
 	<name>plugins/Ilastik_export.jar</name>
-	<description>A Maven project implementing an ImageJ 1.x plugin</description>
 
 	<developers>
 		<developer>
@@ -74,4 +73,5 @@
 		</plugins>
 	</build> -->
 
+	<description>ilastik HDF5 import/export plugin, which also adds BigDataViewer capabilities to read ilastik-style HDF5 files</description>
 </project>

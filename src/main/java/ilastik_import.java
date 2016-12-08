@@ -96,6 +96,7 @@ public class ilastik_import implements PlugIn {
 		int nCols     = 0;
 		int nChannels = 0;
 		int nFrames = 0 ;
+		double maxGray = 1;
 
 		boolean isRGB = false;
 
@@ -132,28 +133,27 @@ public class ilastik_import implements PlugIn {
 						nChannels = (int)dsInfo.getDimensions()[4];   
 						IJ.log("nFrames" + String.valueOf(nFrames) + "nLevs" + String.valueOf(nLevels));
 					} else {
-						IJ.error( name + ": rank " + rank + " of type " + typeText + " not supported (yet)");
+						IJ.error(" the data should have 5 dimensions");
 					}
 					int sliceSize = nCols * nRows;
 
 					if (typeText.equals( "uint8") && isRGB == false) {
 
-
 						MDByteArray rawdata = reader.uint8().readMDArray(info.getName());
 						byte[] flat_data = rawdata.getAsFlatArray();
-//						byte[] flat_data2 = new byte[flat_data.length];
+						//						byte[] flat_data2 = new byte[flat_data.length];
 
 						imp = IJ.createHyperStack( name , 
 								nCols, nRows, nChannels, nLevels, nFrames, 8);
 
-			            for (int frame = 0; frame < nFrames; ++frame) {
-			            		for( int lev = 0; lev < nLevels; ++lev) {
-			            			for (int c = 0; c < nChannels; ++c) {
-			            		
+						for (int frame = 0; frame < nFrames; ++frame) {
+							for( int lev = 0; lev < nLevels; ++lev) {
+								for (int c = 0; c < nChannels; ++c) {
+
 									ImageProcessor ip = imp.getStack().getProcessor(imp.getStackIndex(
 											c+1, lev+1, frame+1));
 									byte[] destData = (byte[])ip.getPixels();
-									
+
 									for (int x=0; x<nCols; x++) {
 										for (int y=0; y<nRows; y++) {
 											int scrIndex = c + lev*nChannels + y*nLevels*nChannels+ x*nLevels*nRows*nChannels + frame*nLevels*nCols*nRows*nChannels ;
@@ -161,110 +161,185 @@ public class ilastik_import implements PlugIn {
 											destData[destIndex] = flat_data[scrIndex];
 										}
 									}
-			            		
 								}
 							}
 						}
+						maxGray = 255;
+						IJ.log("DONE");
+
+					} else if (typeText.equals("uint16")){
+
+						IJ.log("Bit-depth: 16bit");
+						MDShortArray rawdata = reader.uint16().readMDArray(info.getName());
+						short[] flat_data = rawdata.getAsFlatArray();
+
+						imp = IJ.createHyperStack( name , 
+								nCols, nRows, nChannels, nLevels, nFrames, 16);
+
+						for (int frame = 0; frame < nFrames; ++frame) {
+							for( int lev = 0; lev < nLevels; ++lev) {
+								for (int c = 0; c < nChannels; ++c) {
+
+									ImageProcessor ip = imp.getStack().getProcessor(imp.getStackIndex(
+											c +1, lev+1, frame+1));
+									short[] destData = (short[])ip.getPixels();
+
+									for (int x=0; x<nCols; x++) {
+										for (int y=0; y<nRows; y++) {
+											int scrIndex = c + lev*nChannels + y*nLevels*nChannels+ x*nLevels*nRows*nChannels + frame*nLevels*nCols*nRows*nChannels ;
+											int destIndex = y*nCols + x;
+											destData[destIndex] = flat_data[scrIndex];
+										}
+									}
+								}
+							}
+						}
+						
+			            for (int i = 0; i < flat_data.length; ++i) {
+			            	if (flat_data[i] > maxGray) maxGray = flat_data[i];
+			            }
+						IJ.log("DONE");
+
+					} else if (typeText.equals("int16")){
+
+						IJ.log("Bit-depth: 16bit");
+						MDShortArray rawdata = reader.int16().readMDArray(info.getName());
+						short[] flat_data = rawdata.getAsFlatArray();
+
+						imp = IJ.createHyperStack( name , 
+								nCols, nRows, nChannels, nLevels, nFrames, 16);
+
+						for (int frame = 0; frame < nFrames; ++frame) {
+							for( int lev = 0; lev < nLevels; ++lev) {
+								for (int c = 0; c < nChannels; ++c) {
+
+									ImageProcessor ip = imp.getStack().getProcessor( imp.getStackIndex(
+											c +1, lev+1, frame+1));
+									short[] destData = (short[])ip.getPixels();
+
+									for (int x=0; x<nCols; x++) {
+										for (int y=0; y<nRows; y++) {
+											int scrIndex = c + lev*nChannels + y*nLevels*nChannels+ x*nLevels*nRows*nChannels + frame*nLevels*nCols*nRows*nChannels ;
+											int destIndex = y*nCols + x;
+											destData[destIndex] = flat_data[scrIndex];
+										}
+									}
+								}
+							}
+						}
+			            for (int i = 0; i < flat_data.length; ++i) {
+			            	if (flat_data[i] > maxGray) maxGray = flat_data[i];
+			            }
 						IJ.log("DONE");
 					
-				} else if (typeText.equals( "uint16")){
-
-					IJ.log("flat array");
-					MDShortArray rawdata = reader.uint16().readMDArray(info.getName());
-					short[] flat_data = rawdata.getAsFlatArray();
+	            } else if (typeText.equals("float32") || typeText.equals("float64") ) {
+	            	
+					IJ.log("Bit-depth: " + String.valueOf(typeText));
+					MDFloatArray rawdata = reader.float32().readMDArray(info.getName());
+					float[] flat_data = rawdata.getAsFlatArray();
 
 					imp = IJ.createHyperStack( name , 
-							nCols, nRows, nChannels, nLevels, nFrames, 16);
+							nCols, nRows, nChannels, nLevels, nFrames, 32);
 
 					for (int frame = 0; frame < nFrames; ++frame) {
 						for( int lev = 0; lev < nLevels; ++lev) {
-							for (int channel = 0; channel < nChannels; ++channel) {
-
-								//			            	  IJ.log("lev" + String.valueOf(lev) + " frame" + String.valueOf(frame) + "channel"+ String.valueOf(channel));
+							for (int c = 0; c < nChannels; ++c) {
 
 								ImageProcessor ip = imp.getStack().getProcessor( imp.getStackIndex(
-										channel +1, lev+1, frame+1));
+										c +1, lev+1, frame+1));
+								float[] destData = (float[])ip.getPixels();
 
-								System.arraycopy(flat_data, frame*sliceSize, 
-										(short[])ip.getPixels(), 0, sliceSize);
-
+								for (int x=0; x<nCols; x++) {
+									for (int y=0; y<nRows; y++) {
+										int scrIndex = c + lev*nChannels + y*nLevels*nChannels+ x*nLevels*nRows*nChannels + frame*nLevels*nCols*nRows*nChannels ;
+										int destIndex = y*nCols + x;
+										destData[destIndex] = flat_data[scrIndex];
+									}
+								}
 							}
 						}
 					}
+		            for (int i = 0; i < flat_data.length; ++i) {
+		            	if (flat_data[i] > maxGray) maxGray = flat_data[i];
+		            }
 					IJ.log("DONE");
-				}
+	            	
+	            }
 				}
 				reader.close();
+			    for( int c = 1; c <= nChannels; ++c)
+			    {
+			    	imp.setC(c);
+			        imp.setDisplayRange(0,maxGray);
+			    }
+				
 				imp.show();
-			
-		
+			case SOFT_LINK:
+				break;
+			case GROUP:
+				break;
+			default:
+				break;
+			}
 
-	case SOFT_LINK:
-		break;
-	case GROUP:
-		break;
-	default:
-		break;
 		}
-		
-	}
-}
-
-
-static String getInfo(HDF5DataSetInformation dsInfo){
-
-	HDF5DataTypeInformation dsType = dsInfo.getTypeInformation();
-	String type = "";
-
-	if (dsType.isSigned() == false) {
-		type += "u";
 	}
 
-	switch( dsType.getDataClass())
-	{
-	case INTEGER:
-		type += "int" + 8*dsType.getElementSize();
-		break;
-	case FLOAT:
-		type += "float" + 8*dsType.getElementSize();
-		break;
-	default:
-		type += dsInfo.toString();
+
+	static String getInfo(HDF5DataSetInformation dsInfo){
+
+		HDF5DataTypeInformation dsType = dsInfo.getTypeInformation();
+		String type = "";
+
+		if (dsType.isSigned() == false) {
+			type += "u";
+		}
+
+		switch( dsType.getDataClass())
+		{
+		case INTEGER:
+			type += "int" + 8*dsType.getElementSize();
+			break;
+		case FLOAT:
+			type += "float" + 8*dsType.getElementSize();
+			break;
+		default:
+			type += dsInfo.toString();
+		}
+		return type;
 	}
-	return type;
-}
 
 
-public void showAbout() {
-	IJ.showMessage("ilastik Export",
-			"a template for export data into hdf5 for ilastik"
-			);
-}
+	public void showAbout() {
+		IJ.showMessage("ilastik Export",
+				"a template for export data into hdf5 for ilastik"
+				);
+	}
 
-/**
- * Main method for debugging.
- *
- * For debugging, it is convenient to have a method that starts ImageJ, loads an
- * image and calls the plugin, e.g. after setting breakpoints.
- *
- * @param args unused
- */
-public static void main(String[] args) {
-	// set the plugins.dir property to make the plugin appear in the Plugins menu
-	Class<?> clazz = ilastik_import.class;
-	String url = clazz.getResource("/" + clazz.getName().replace('.', '/') + ".class").toString();
-	String pluginsDir = url.substring("file:".length(), url.length() - clazz.getName().length() - ".class".length());
-	System.setProperty("plugins.dir", pluginsDir);
+	/**
+	 * Main method for debugging.
+	 *
+	 * For debugging, it is convenient to have a method that starts ImageJ, loads an
+	 * image and calls the plugin, e.g. after setting breakpoints.
+	 *
+	 * @param args unused
+	 */
+	public static void main(String[] args) {
+		// set the plugins.dir property to make the plugin appear in the Plugins menu
+		Class<?> clazz = ilastik_import.class;
+		String url = clazz.getResource("/" + clazz.getName().replace('.', '/') + ".class").toString();
+		String pluginsDir = url.substring("file:".length(), url.length() - clazz.getName().length() - ".class".length());
+		System.setProperty("plugins.dir", pluginsDir);
 
-	// start ImageJ
-	new ImageJ();
+		// start ImageJ
+		new ImageJ();
 
-	// open the Clown sample
-	//		ImagePlus image = IJ.openImage("/Users/jmassa/Documents/MaMut_project/drosophila/ilastik_export/Raw_Data_0_10.tif");
-	//		ImagePlus image = IJ.openImage("/Users/jmassa/Documents/MaMut_project/rapoport/raw.tif");
-	//		image.show();
+		// open the Clown sample
+		//		ImagePlus image = IJ.openImage("/Users/jmassa/Documents/MaMut_project/drosophila/ilastik_export/Raw_Data_0_10.tif");
+		//		ImagePlus image = IJ.openImage("/Users/jmassa/Documents/MaMut_project/rapoport/raw.tif");
+		//		image.show();
 
-	// run the plugin
-	//IJ.runPlugIn(clazz.getName(), "");
-}
+		// run the plugin
+		//IJ.runPlugIn(clazz.getName(), "");
+	}
 }

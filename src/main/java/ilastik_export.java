@@ -122,7 +122,6 @@ public class ilastik_export implements PlugInFilter {
 	                || imgColorType == ImagePlus.COLOR_256 ) 
 	        {	
 	        	byte[] pixels = null;
-	        	
 	        	stack = image.getStack();
 
 	        	
@@ -162,7 +161,7 @@ public class ilastik_export implements PlugInFilter {
 	        	short[] pixels = null;
 	        	stack = image.getStack();
 	        	
-	        	MDShortArray arr = new MDShortArray( channelDims);
+	        	MDShortArray arr = new MDShortArray(channelDims);
 	        	short[] flatArray = arr.getAsFlatArray();
 	        	short[] flatArray2 = new short[flatArray.length];
 	        	
@@ -171,8 +170,8 @@ public class ilastik_export implements PlugInFilter {
 	        		
 		            System.arraycopy(pixels, 0,
                		     flatArray, (i-1)*slizeSize, slizeSize);
-
 	        	}
+	        	
 	            System.arraycopy(flatArray, 0, flatArray2, 0, flatArray.length);
 	            for (int t=0; t<nFrames; t++) {
 	                for (int z=0; z<nLevs; z++) {
@@ -335,13 +334,13 @@ public class ilastik_export implements PlugInFilter {
 		String pluginsDir = url.substring("file:".length(), url.length() - clazz.getName().length() - ".class".length());
 		System.out.println(pluginsDir);
 		System.setProperty("plugins.dir", pluginsDir);
-
+		
 		// start ImageJ
 		new ImageJ();
 
 		// open the Clown sample
-		ImagePlus image = IJ.openImage("/Users/jmassa/Documents/ilastik/datasets/3D_LargeWhirl.tif");
-//		ImagePlus image = IJ.openImage("/Users/jmassa/Documents/MaMut_project/rapoport/raw.tif");
+//		ImagePlus image = IJ.openImage("/Users/jmassa/Documents/ilastik/datasets/3D_LargeWhirl.tif");
+		ImagePlus image = IJ.openImage("/Users/jmassa/Documents/MaMut_project/rapoport/raw.tif");
 //		ImagePlus image = IJ.openImage("/Users/jmassa/Documents/MaMut_project/drosophila/ilastik_export/Raw_Data_0_10.tif");
 //		ImagePlus image = IJ.openImage("/Users/chaubold/hci/data/virginie/Number3/MI_Substack (1-170).tif");
 		image.show();

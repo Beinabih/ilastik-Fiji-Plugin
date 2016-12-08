@@ -18,6 +18,7 @@ import bdv.img.hdf5.DimsAndExistence;
 import bdv.img.hdf5.Hdf5ImageLoader;
 import ch.systemsx.cisd.hdf5.HDF5Factory;
 import ch.systemsx.cisd.hdf5.IHDF5Reader;
+import ij.IJ;
 import mpicbg.spim.data.generic.sequence.ImgLoaderHint;
 import net.imglib2.RandomAccessibleInterval;
 import net.imglib2.Volatile;
@@ -68,13 +69,22 @@ public class Hdf5IlastikImageLoader<T extends NativeType< T >, V extends Volatil
 		
 		this.hdf5File = hdf5File;
 		this.hdf5Reader = HDF5Factory.openForReading( hdf5File );
-		this.hdf5Access = new IlastikHDF5Access( hdf5Reader, dataset );
+		try
+		{
+			this.hdf5Access = new IlastikHDF5AccessHack( hdf5Reader, dataset );
+			IJ.log("Using access hack!");
+		}
+		catch ( final Exception e )
+		{
+			e.printStackTrace();
+			this.hdf5Access = new IlastikHDF5Access( hdf5Reader, dataset );
+		}
 		this.loader = dataType.createArrayLoader( hdf5Access );
 		DimsAndExistence dimsAndExistence = hdf5Access.getDimsAndExistence(null);
 		this.imageDimensions = dimsAndExistence.getDimensions();
 		this.blockDimensions = new int[]{32,32,32};
 
-		this.cache = new VolatileGlobalCellCache( numScales, 10 );
+		this.cache = new VolatileGlobalCellCache( numScales, 1 );
 	}
 
 	/**

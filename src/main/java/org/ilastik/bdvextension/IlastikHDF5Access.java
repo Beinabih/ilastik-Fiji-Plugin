@@ -39,6 +39,7 @@ import ch.systemsx.cisd.base.mdarray.MDByteArray;
 import ch.systemsx.cisd.base.mdarray.MDShortArray;
 import ch.systemsx.cisd.hdf5.HDF5DataSetInformation;
 import ch.systemsx.cisd.hdf5.IHDF5Reader;
+import ij.IJ;
 
 class IlastikHDF5Access implements IIlastikHDF5Access
 {
@@ -50,37 +51,51 @@ class IlastikHDF5Access implements IIlastikHDF5Access
 	
 	private final String dataset;
 	
-	private final long numTimesteps;
+	private long numTimesteps;
 	
-	private final long numChannels;
+	private long numChannels;
 
 	public IlastikHDF5Access( final IHDF5Reader hdf5Reader, final String dataset )
 	{
 		this.hdf5Reader = hdf5Reader;
 		this.dataset = dataset;
 		
-		HDF5DataSetInformation info = hdf5Reader.getDataSetInformation( dataset );
-		long[] dimensions = info.getDimensions();
-		this.numTimesteps = dimensions[0];
-		this.numChannels = dimensions[4];
+		long[] dimensions = extract5Dimensions();
+		IJ.log("Found dataset of size [" + String.valueOf(dimensions[0]) + ", " + String.valueOf(dimensions[1]) 
+		   + ", " + String.valueOf(dimensions[2]) + ", " + String.valueOf(dimensions[3]) + ", " + String.valueOf(dimensions[4]) + ", ");
+		if( dimensions != null )
+		{
+			this.numTimesteps = dimensions[0];
+			this.numChannels = dimensions[4];
+		}
+		else
+		{
+			this.numTimesteps = 0;
+			this.numChannels = 0;
+		}
+	}
+	
+	private long[] extract5Dimensions()
+	{
+		long[] dimensions = null;
+		try
+		{
+			HDF5DataSetInformation info = hdf5Reader.getDataSetInformation( dataset );
+			dimensions = info.getDimensions();
+		}
+		catch ( final Exception e )
+		{}
+		return dimensions;
 	}
 
 	public synchronized DimsAndExistence getDimsAndExistence()
 	{
-		HDF5DataSetInformation info = null;
-		boolean exists = false;
-		long[] dimensions = null;
-		try
+		long[] all5Dimensions = extract5Dimensions();
+		if ( all5Dimensions != null )
 		{
-			info = hdf5Reader.getDataSetInformation( dataset );
-			long[] all5Dimensions = info.getDimensions();
-			dimensions = new long[]{all5Dimensions[1], all5Dimensions[2], all5Dimensions[3]};
-			exists = true;
-		}
-		catch ( final Exception e )
-		{}
-		if ( exists )
+			long[] dimensions = new long[]{all5Dimensions[1], all5Dimensions[2], all5Dimensions[3]};
 			return new DimsAndExistence( reorder( dimensions ), true );
+		}
 		else
 			return new DimsAndExistence( new long[] { 1, 1, 1 }, false );
 	}
@@ -93,7 +108,7 @@ class IlastikHDF5Access implements IIlastikHDF5Access
 	
 	private int[] get5DimsFrom3Dims(final int[] dimensions)
 	{
-		return new int[]{1, reorderedDimensions[0], reorderedDimensions[1], reorderedDimensions[2], 1};
+		return new int[]{1, dimensions[0], dimensions[1], dimensions[2], 1};
 	}
 	
 	private long[] get5DMinsFrom3Mins(final long min[], final int timepoint, final int setup)
@@ -110,7 +125,7 @@ class IlastikHDF5Access implements IIlastikHDF5Access
 		else if(setup < 0)
 			clampedSetup = 0;
 		
-		return new long[]{clampedTimepoint, reorderedMin[0], reorderedMin[1], reorderedMin[2], clampedSetup};
+		return new long[]{clampedTimepoint, min[0], min[1], min[2], clampedSetup};
 	}
 
 	@Override

@@ -100,127 +100,161 @@ public class ilastik_import implements PlugIn {
 
 		boolean isRGB = false;
 
-
-		IHDF5Reader reader = HDF5Factory.openForReading(fullFileName_);
-
-		//	    path inside HDF5
-		HDF5LinkInformation link = reader.object().getLinkInformation("/");
-
-		List<HDF5LinkInformation> members = reader.object().getGroupMemberInformation(link.getPath(), true);
-
-		for (HDF5LinkInformation info : members)
+		try
 		{
-			IJ.log(info.getPath() + ": " + info.getType());
-			switch (info.getType())
+			IHDF5Reader reader = HDF5Factory.openForReading(fullFileName_);
+	
+			//	    path inside HDF5
+			HDF5LinkInformation link = reader.object().getLinkInformation("/");
+	
+			List<HDF5LinkInformation> members = reader.object().getGroupMemberInformation(link.getPath(), true);
+	
+			for (HDF5LinkInformation info : members)
 			{
-			case DATASET:
-				HDF5DataSetInformation dsInfo = reader.object().getDataSetInformation(info.getPath());
-
-
-				if (imp == null) {
-					//	        	  get rank
-					rank = dsInfo.getRank();
-
-					//	              get type information
-					String typeText = getInfo(dsInfo);
-
-					if (rank == 5) {
-						nFrames = (int)dsInfo.getDimensions()[0];
-						nCols = (int)dsInfo.getDimensions()[1];
-						nRows = (int)dsInfo.getDimensions()[2];
-						nLevels = (int)dsInfo.getDimensions()[3];
-						nChannels = (int)dsInfo.getDimensions()[4];   
-						IJ.log("Dimensions: " + String.valueOf(nFrames) + "x" + String.valueOf(nCols) + "x" 
-								+ String.valueOf(nRows) + "x" + String.valueOf(nLevels) + "x" + String.valueOf(nChannels));
-					} else {
-						IJ.error(" the data should have 5 dimensions");
-					}
-					int sliceSize = nCols * nRows;
-
-					if (typeText.equals( "uint8") && isRGB == false) {
-						
-						IJ.log("Bit-depth: " + String.valueOf(typeText));
-						IJ.log("Loading Data");
-						MDByteArray rawdata = reader.uint8().readMDArray(info.getName());
-						byte[] flat_data = rawdata.getAsFlatArray();
-						//						byte[] flat_data2 = new byte[flat_data.length];
-
-						imp = IJ.createHyperStack( name , 
-								nCols, nRows, nChannels, nLevels, nFrames, 8);
-
-						for (int frame = 0; frame < nFrames; ++frame) {
-							for( int lev = 0; lev < nLevels; ++lev) {
-								for (int c = 0; c < nChannels; ++c) {
-
-									ImageProcessor ip = imp.getStack().getProcessor(imp.getStackIndex(
-											c+1, lev+1, frame+1));
-									byte[] destData = (byte[])ip.getPixels();
-
-									for (int x=0; x<nCols; x++) {
-										for (int y=0; y<nRows; y++) {
-											int scrIndex = c + lev*nChannels + y*nLevels*nChannels+ x*nLevels*nRows*nChannels + frame*nLevels*nCols*nRows*nChannels ;
-											int destIndex = y*nCols + x;
-											destData[destIndex] = flat_data[scrIndex];
+				IJ.log(info.getPath() + ": " + info.getType());
+				switch (info.getType())
+				{
+				case DATASET:
+					HDF5DataSetInformation dsInfo = reader.object().getDataSetInformation(info.getPath());
+	
+	
+					if (imp == null) {
+						//	        	  get rank
+						rank = dsInfo.getRank();
+	
+						//	              get type information
+						String typeText = getInfo(dsInfo);
+	
+						if (rank == 5) {
+							nFrames = (int)dsInfo.getDimensions()[0];
+							nCols = (int)dsInfo.getDimensions()[1];
+							nRows = (int)dsInfo.getDimensions()[2];
+							nLevels = (int)dsInfo.getDimensions()[3];
+							nChannels = (int)dsInfo.getDimensions()[4];   
+							IJ.log("Dimensions: " + String.valueOf(nFrames) + "x" + String.valueOf(nCols) + "x" 
+									+ String.valueOf(nRows) + "x" + String.valueOf(nLevels) + "x" + String.valueOf(nChannels));
+						} else {
+							IJ.error(" the data should have 5 dimensions");
+						}
+						int sliceSize = nCols * nRows;
+	
+						if (typeText.equals( "uint8") && isRGB == false) {
+							
+							IJ.log("Bit-depth: " + String.valueOf(typeText));
+							IJ.log("Loading Data");
+							MDByteArray rawdata = reader.uint8().readMDArray(info.getName());
+							byte[] flat_data = rawdata.getAsFlatArray();
+							//						byte[] flat_data2 = new byte[flat_data.length];
+	
+							imp = IJ.createHyperStack( name , 
+									nCols, nRows, nChannels, nLevels, nFrames, 8);
+	
+							for (int frame = 0; frame < nFrames; ++frame) {
+								for( int lev = 0; lev < nLevels; ++lev) {
+									for (int c = 0; c < nChannels; ++c) {
+	
+										ImageProcessor ip = imp.getStack().getProcessor(imp.getStackIndex(
+												c+1, lev+1, frame+1));
+										byte[] destData = (byte[])ip.getPixels();
+	
+										for (int x=0; x<nCols; x++) {
+											for (int y=0; y<nRows; y++) {
+												int scrIndex = c + lev*nChannels + y*nLevels*nChannels+ x*nLevels*nRows*nChannels + frame*nLevels*nCols*nRows*nChannels ;
+												int destIndex = y*nCols + x;
+												destData[destIndex] = flat_data[scrIndex];
+											}
 										}
 									}
 								}
 							}
-						}
-						maxGray = 255;
-						IJ.log("DONE");
-
-					} else if (typeText.equals("uint16")){
-
-						IJ.log("Bit-depth: " + String.valueOf(typeText));
-						IJ.log("Loading Data");
-						MDShortArray rawdata = reader.uint16().readMDArray(info.getName());
-						short[] flat_data = rawdata.getAsFlatArray();
-
-						imp = IJ.createHyperStack( name , 
-								nCols, nRows, nChannels, nLevels, nFrames, 16);
-
-						for (int frame = 0; frame < nFrames; ++frame) {
-							for( int lev = 0; lev < nLevels; ++lev) {
-								for (int c = 0; c < nChannels; ++c) {
-
-									ImageProcessor ip = imp.getStack().getProcessor(imp.getStackIndex(
-											c +1, lev+1, frame+1));
-									short[] destData = (short[])ip.getPixels();
-
-									for (int x=0; x<nCols; x++) {
-										for (int y=0; y<nRows; y++) {
-											int scrIndex = c + lev*nChannels + y*nLevels*nChannels+ x*nLevels*nRows*nChannels + frame*nLevels*nCols*nRows*nChannels ;
-											int destIndex = y*nCols + x;
-											destData[destIndex] = flat_data[scrIndex];
+							maxGray = 255;
+							IJ.log("DONE");
+	
+						} else if (typeText.equals("uint16")){
+	
+							IJ.log("Bit-depth: " + String.valueOf(typeText));
+							IJ.log("Loading Data");
+							MDShortArray rawdata = reader.uint16().readMDArray(info.getName());
+							short[] flat_data = rawdata.getAsFlatArray();
+	
+							imp = IJ.createHyperStack( name , 
+									nCols, nRows, nChannels, nLevels, nFrames, 16);
+	
+							for (int frame = 0; frame < nFrames; ++frame) {
+								for( int lev = 0; lev < nLevels; ++lev) {
+									for (int c = 0; c < nChannels; ++c) {
+	
+										ImageProcessor ip = imp.getStack().getProcessor(imp.getStackIndex(
+												c +1, lev+1, frame+1));
+										short[] destData = (short[])ip.getPixels();
+	
+										for (int x=0; x<nCols; x++) {
+											for (int y=0; y<nRows; y++) {
+												int scrIndex = c + lev*nChannels + y*nLevels*nChannels+ x*nLevels*nRows*nChannels + frame*nLevels*nCols*nRows*nChannels ;
+												int destIndex = y*nCols + x;
+												destData[destIndex] = flat_data[scrIndex];
+											}
 										}
 									}
 								}
 							}
-						}
+							
+				            for (int i = 0; i < flat_data.length; ++i) {
+				            	if (flat_data[i] > maxGray) maxGray = flat_data[i];
+				            }
+							IJ.log("DONE");
+	
+						} else if (typeText.equals("int16")){
+	
+							IJ.log("Bit-depth: " + String.valueOf(typeText));
+							IJ.log("Loading Data");
+							MDShortArray rawdata = reader.int16().readMDArray(info.getName());
+							short[] flat_data = rawdata.getAsFlatArray();
+	
+							imp = IJ.createHyperStack( name , 
+									nCols, nRows, nChannels, nLevels, nFrames, 16);
+	
+							for (int frame = 0; frame < nFrames; ++frame) {
+								for( int lev = 0; lev < nLevels; ++lev) {
+									for (int c = 0; c < nChannels; ++c) {
+	
+										ImageProcessor ip = imp.getStack().getProcessor( imp.getStackIndex(
+												c +1, lev+1, frame+1));
+										short[] destData = (short[])ip.getPixels();
+	
+										for (int x=0; x<nCols; x++) {
+											for (int y=0; y<nRows; y++) {
+												int scrIndex = c + lev*nChannels + y*nLevels*nChannels+ x*nLevels*nRows*nChannels + frame*nLevels*nCols*nRows*nChannels ;
+												int destIndex = y*nCols + x;
+												destData[destIndex] = flat_data[scrIndex];
+											}
+										}
+									}
+								}
+							}
+				            for (int i = 0; i < flat_data.length; ++i) {
+				            	if (flat_data[i] > maxGray) maxGray = flat_data[i];
+				            }
+							IJ.log("DONE");
 						
-			            for (int i = 0; i < flat_data.length; ++i) {
-			            	if (flat_data[i] > maxGray) maxGray = flat_data[i];
-			            }
-						IJ.log("DONE");
-
-					} else if (typeText.equals("int16")){
-
+		            } else if (typeText.equals("float32") || typeText.equals("float64") ) {
+		            	
 						IJ.log("Bit-depth: " + String.valueOf(typeText));
 						IJ.log("Loading Data");
-						MDShortArray rawdata = reader.int16().readMDArray(info.getName());
-						short[] flat_data = rawdata.getAsFlatArray();
-
+						MDFloatArray rawdata = reader.float32().readMDArray(info.getName());
+						float[] flat_data = rawdata.getAsFlatArray();
+	
 						imp = IJ.createHyperStack( name , 
-								nCols, nRows, nChannels, nLevels, nFrames, 16);
-
+								nCols, nRows, nChannels, nLevels, nFrames, 32);
+	
 						for (int frame = 0; frame < nFrames; ++frame) {
 							for( int lev = 0; lev < nLevels; ++lev) {
 								for (int c = 0; c < nChannels; ++c) {
-
+	
 									ImageProcessor ip = imp.getStack().getProcessor( imp.getStackIndex(
 											c +1, lev+1, frame+1));
-									short[] destData = (short[])ip.getPixels();
-
+									float[] destData = (float[])ip.getPixels();
+	
 									for (int x=0; x<nCols; x++) {
 										for (int y=0; y<nRows; y++) {
 											int scrIndex = c + lev*nChannels + y*nLevels*nChannels+ x*nLevels*nRows*nChannels + frame*nLevels*nCols*nRows*nChannels ;
@@ -235,60 +269,43 @@ public class ilastik_import implements PlugIn {
 			            	if (flat_data[i] > maxGray) maxGray = flat_data[i];
 			            }
 						IJ.log("DONE");
-					
-	            } else if (typeText.equals("float32") || typeText.equals("float64") ) {
-	            	
-					IJ.log("Bit-depth: " + String.valueOf(typeText));
-					IJ.log("Loading Data");
-					MDFloatArray rawdata = reader.float32().readMDArray(info.getName());
-					float[] flat_data = rawdata.getAsFlatArray();
-
-					imp = IJ.createHyperStack( name , 
-							nCols, nRows, nChannels, nLevels, nFrames, 32);
-
-					for (int frame = 0; frame < nFrames; ++frame) {
-						for( int lev = 0; lev < nLevels; ++lev) {
-							for (int c = 0; c < nChannels; ++c) {
-
-								ImageProcessor ip = imp.getStack().getProcessor( imp.getStackIndex(
-										c +1, lev+1, frame+1));
-								float[] destData = (float[])ip.getPixels();
-
-								for (int x=0; x<nCols; x++) {
-									for (int y=0; y<nRows; y++) {
-										int scrIndex = c + lev*nChannels + y*nLevels*nChannels+ x*nLevels*nRows*nChannels + frame*nLevels*nCols*nRows*nChannels ;
-										int destIndex = y*nCols + x;
-										destData[destIndex] = flat_data[scrIndex];
-									}
-								}
-							}
-						}
-					}
-		            for (int i = 0; i < flat_data.length; ++i) {
-		            	if (flat_data[i] > maxGray) maxGray = flat_data[i];
+		            	
 		            }
-					IJ.log("DONE");
-	            	
-	            }
+					}
+					reader.close();
+				    for( int c = 1; c <= nChannels; ++c)
+				    {
+				    	imp.setC(c);
+				        imp.setDisplayRange(0,maxGray);
+				    }
+					
+					imp.show();
+				case SOFT_LINK:
+					break;
+				case GROUP:
+					break;
+				default:
+					break;
 				}
-				reader.close();
-			    for( int c = 1; c <= nChannels; ++c)
-			    {
-			    	imp.setC(c);
-			        imp.setDisplayRange(0,maxGray);
-			    }
-				
-				imp.show();
-			case SOFT_LINK:
-				break;
-			case GROUP:
-				break;
-			default:
-				break;
 			}
-
 		}
-	}
+	    catch (HDF5Exception err) 
+	    {
+	      IJ.error("Error while opening '" + fullFileName_ 
+	               + err);
+	    } 
+	    catch (Exception err) 
+	    {
+	      IJ.error("Error while opening '" + fullFileName_
+	               + err);
+	    } 
+	    catch (OutOfMemoryError o) 
+	    {
+	      IJ.outOfMemory("Load HDF5");
+	    }
+  
+	  }
+	
 
 	static String getInfo(HDF5DataSetInformation dsInfo){
 

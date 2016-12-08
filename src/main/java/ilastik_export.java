@@ -119,7 +119,6 @@ public class ilastik_export implements PlugInFilter {
 	        	byte[] pixels = null;
 	        	stack = image.getStack();
 
-	        	
 	        	MDByteArray arr = new MDByteArray(channelDims);
 	        	byte[] flatArray = arr.getAsFlatArray();
 	        	byte[] flatArray2 = new byte[flatArray.length];
@@ -128,8 +127,7 @@ public class ilastik_export implements PlugInFilter {
 		        	pixels = (byte[]) stack.getPixels(i); 
 		       
 		            System.arraycopy(pixels, 0,
-		                		     flatArray, (i-1)*slizeSize, slizeSize);
-		            	 		
+		                		     flatArray, (i-1)*slizeSize, slizeSize); 	 		
 		        }	
 		        
 		            System.arraycopy(flatArray, 0, flatArray2, 0, flatArray.length);
@@ -148,7 +146,7 @@ public class ilastik_export implements PlugInFilter {
 		        IJ.log("write uint8 hdf5");
 	        	writer.uint8().writeMDArray( "export_data", arr, HDF5IntStorageFeatures.createDeflationDelete(compressionLevel));
 	        	IJ.log("compressionLevel: " + String.valueOf(compressionLevel));
-	        	IJ.log("DONE");
+	        	IJ.log("Done");
 	        }
 
 	        else if (imgColorType == ImagePlus.GRAY16) 
@@ -182,7 +180,7 @@ public class ilastik_export implements PlugInFilter {
 	            IJ.log("write uint16 hdf5");
 	        	writer.uint16().writeMDArray( "export_data", arr, HDF5IntStorageFeatures.createDeflationDelete(compressionLevel));
 	        	IJ.log("compressionLevel: " + String.valueOf(compressionLevel));
-	        	IJ.log("DONE");
+	        	IJ.log("Done");
             }
 	        else if (imgColorType == ImagePlus.GRAY32)
             {
@@ -215,13 +213,10 @@ public class ilastik_export implements PlugInFilter {
 	            IJ.log("write float32 hdf5");
 	        	writer.float32().writeMDArray( "export_data", arr, HDF5FloatStorageFeatures.createDeflationDelete(compressionLevel));
 	        	IJ.log("compressionLevel: " + String.valueOf(compressionLevel));
-	        	IJ.log("DONE");	
+	        	IJ.log("Done");	
             } 
 	        else if (imgColorType == ImagePlus.COLOR_RGB){
 	        	
-	        	IJ.log("RGB");
-	        	IJ.log(String.valueOf(nFrames));
-
 	        	long[] channelDimsRGB = null;
 		        if (nLevs > 1) 
 		        {
@@ -263,28 +258,23 @@ public class ilastik_export implements PlugInFilter {
 		          	                
 			                		for (int y=0; y<nRows; y++) {
 			                			for (int x=0; x<nCols; x++) {
-			                				int scrIndex = x + y*nCols;// + c*nCols*nRows + z*nCols*nRows*nChannels + t*nCols*nRows*nLevs*nChannels;
-//			                				int scrIndex2 = x + y*nCols + c*nCols*nRows + z*nCols*nRows*nChannels + t*nCols*nRows*nLevs*nChannels;
+			                				int scrIndex = x + y*nCols;
 			                				int destIndex = z*3 + y*nLevs*3 + x*nLevs*nRows*3 + t*nLevs*nCols*nRows*3;
-//			                				int destIndex2 =  c + z*nChannels + y*nLevs*nChannels + x*nLevs*nRows*nChannels + t*nLevs*nCols*nRows*nChannels;
-//			                				flatArray[destIndex] = flatArray2[scrIndex2];
 			                				flatArray[destIndex+0] = red[scrIndex];
 			                				flatArray[destIndex+1] = green[scrIndex];
-			                				flatArray[destIndex+2] = blue[scrIndex];
-			                				
+			                				flatArray[destIndex+2] = blue[scrIndex];	
 			                			}
 			                		}
 			                	}	
 			                }
 			            }
-			            IJ.log("write RGB");
+			            IJ.log("write uint8 RGB HDF5");
 			            writer.uint8().writeMDArray( "export_data", arr, HDF5IntStorageFeatures.createDeflationDelete(compressionLevel));
 			        	IJ.log("compressionLevel: " + String.valueOf(compressionLevel));
-			        	IJ.log("DONE");	
-		        
+			        	IJ.log("Done");
+
 		        }
 	        	
-	        
 	        writer.close();
 
 	      }
@@ -336,9 +326,9 @@ public class ilastik_export implements PlugInFilter {
 		// open the Clown sample
 //		ImagePlus image = IJ.openImage("/Users/jmassa/Documents/ilastik/datasets/3D_LargeWhirl.tif");
 //		ImagePlus image = IJ.openImage("/Users/jmassa/Documents/MaMut_project/rapoport/raw.tif");
-		ImagePlus image = IJ.openImage("/Users/jmassa/Documents/MaMut_project/drosophila/ilastik_export/Raw_Data_0_10.tif");
+//		ImagePlus image = IJ.openImage("/Users/jmassa/Documents/MaMut_project/drosophila/ilastik_export/Raw_Data_0_10.tif");
 //		ImagePlus image = IJ.openImage("/Users/chaubold/hci/data/virginie/Number3/MI_Substack (1-170).tif");
-		image.show();
+//		image.show();
 
 		// run the plugin
 		//IJ.runPlugIn(clazz.getName(), "");

@@ -38,6 +38,8 @@ import ij.io.SaveDialog;
 import ij.plugin.filter.PlugInFilter;
 import ij.process.ImageProcessor;
 import ij.plugin.*;
+import java.util.Vector;
+import javax.swing.*;
 
 /**
  * ilastik export
@@ -59,6 +61,7 @@ public class ilastik_import extends JFrame implements PlugIn, ActionListener {
 	private  List<String> datasetList;
 	private IHDF5Reader reader;
 	private JComboBox dataSetBox;
+	private JFrame errorWindow;
 
 
 	// plugin parameters
@@ -99,7 +102,7 @@ public class ilastik_import extends JFrame implements PlugIn, ActionListener {
 
 		fullFileName_ = directory + name;
 		IJ.showStatus("Loading HDF5 File: " + fullFileName_);
-		
+
 		this.datasetList = new ArrayList<String>();
 
 		try
@@ -108,26 +111,26 @@ public class ilastik_import extends JFrame implements PlugIn, ActionListener {
 			String path = "/";
 			findData(reader, path);
 			chooseData(reader, datasetList);
-	
+
 
 		}
-	    catch (HDF5Exception err) 
-	    {
-	      IJ.error("Error while opening '" + fullFileName_ 
-	               + err);
-	    } 
-	    catch (Exception err) 
-	    {
-	      IJ.error("Error while opening '" + fullFileName_
-	               + err);
-	    } 
-	    catch (OutOfMemoryError o) 
-	    {
-	      IJ.outOfMemory("Load HDF5");
-	    }
-  
-	  }
-	
+		catch (HDF5Exception err) 
+		{
+			IJ.error("Error while opening '" + fullFileName_ 
+					+ err);
+		} 
+		catch (Exception err) 
+		{
+			IJ.error("Error while opening '" + fullFileName_
+					+ err);
+		} 
+		catch (OutOfMemoryError o) 
+		{
+			IJ.outOfMemory("Load HDF5");
+		}
+
+	}
+
 
 	static String getInfo(HDF5DataSetInformation dsInfo){
 
@@ -151,9 +154,9 @@ public class ilastik_import extends JFrame implements PlugIn, ActionListener {
 		}
 		return type;
 	}
-	
+
 	public void findData(IHDF5Reader reader, String path){
-		
+
 		//	    path inside HDF5
 		HDF5LinkInformation link = reader.object().getLinkInformation(path);
 
@@ -166,46 +169,58 @@ public class ilastik_import extends JFrame implements PlugIn, ActionListener {
 			{
 			case DATASET:
 				datasetList.add(info.getPath());		
-		
+
 			case SOFT_LINK:
 				break;
 			case GROUP:
 				path = info.getPath();
 				findData(reader, path);
-				
+
 			default:
 				break;
 			}
 		}
-	
+
 	}
 
 	public void chooseData(IHDF5Reader reader, List<String> datasetList ){
-		
-		
-		
 
-	    JButton b1 = new JButton("Load");
-	    b1.setActionCommand("load");
-	    b1.addActionListener(this);
-	    JButton b2 = new JButton("Cancel");
-	    b2.setActionCommand("cancel");
-	    b2.addActionListener(this);
-	    
-	    String[] dataSets = new String[datasetList.size()];
-	    dataSets = datasetList.toArray(dataSets);
 
-	    this.dataSetBox = new JComboBox(dataSets);
-//	    dataSetBox.setSelectedIndex(0);
-	    dataSetBox.addActionListener(this);
-	    
-	    getContentPane().add(dataSetBox, BorderLayout.PAGE_START);
-	    getContentPane().add(b1, BorderLayout.LINE_START );
-	    getContentPane().add(b2, BorderLayout.LINE_END);
-	    setResizable(false);
-	    pack();
-	    setVisible(true);
-	   
+		JButton b1 = new JButton("Load");
+		b1.setActionCommand("load");
+		b1.addActionListener(this);
+		JButton b2 = new JButton("Cancel");
+		b2.setActionCommand("cancel");
+		b2.addActionListener(this);
+
+		String[] dataSets = new String[datasetList.size()];
+		dataSets = datasetList.toArray(dataSets);
+		
+		this.dataSetBox = new JComboBox(new ilastikBoxModel());
+		
+		for(int i =0; i < datasetList.size(); i++){
+			
+			if (reader.object().getDataSetInformation(dataSets[i]).getRank() == 5){
+				
+				dataSetBox.addItem(new comboBoxDimensions(dataSets[i], "loadable"));
+			}
+			else{
+				dataSetBox.addItem(new comboBoxDimensions(dataSets[i], "wrong dim"));
+			}
+			
+		}
+
+		//this.dataSetBox = new JComboBox(dataSets);
+		//	    dataSetBox.setSelectedIndex(0);
+		dataSetBox.addActionListener(this);
+
+		getContentPane().add(dataSetBox, BorderLayout.PAGE_START);
+		getContentPane().add(b1, BorderLayout.LINE_START );
+		getContentPane().add(b2, BorderLayout.LINE_END);
+		setResizable(false);
+		pack();
+		setVisible(true);
+
 	}
 
 	public void getData(){
@@ -217,159 +232,65 @@ public class ilastik_import extends JFrame implements PlugIn, ActionListener {
 		int nFrames = 0 ;
 		double maxGray = 1;
 		String path;
-		
+
 		boolean isRGB = false;
 		ImagePlus imp = null;
 
-	 
-		    path = (String)dataSetBox.getSelectedItem();
-		    IJ.log(path);
-		    
-			HDF5DataSetInformation dsInfo = reader.object().getDataSetInformation(path);
+
+		String boxInfo = (String)dataSetBox.getSelectedItem();
+		String[] parts = boxInfo.split(":");
+		path = parts[1].replaceAll("\\s+","");
+		
+		IJ.log(path);
+
+		HDF5DataSetInformation dsInfo = reader.object().getDataSetInformation(path);
+
+
+		if (imp == null) {
+			//	        	  get rank
+			rank = dsInfo.getRank();
+
+			//	              get type information
+			String typeText = getInfo(dsInfo);
+
+			if (rank == 5) {
+				nFrames = (int)dsInfo.getDimensions()[0];
+				nCols = (int)dsInfo.getDimensions()[1];
+				nRows = (int)dsInfo.getDimensions()[2];
+				nLevels = (int)dsInfo.getDimensions()[3];
+				nChannels = (int)dsInfo.getDimensions()[4];   
+				IJ.log("Dimensions: " + String.valueOf(nFrames) + "x" + String.valueOf(nCols) + "x" 
+						+ String.valueOf(nRows) + "x" + String.valueOf(nLevels) + "x" + String.valueOf(nChannels));
+			} else {
 			
-			
-			if (imp == null) {
-				//	        	  get rank
-				rank = dsInfo.getRank();
-	
-				//	              get type information
-				String typeText = getInfo(dsInfo);
-	
-				if (rank == 5) {
-					nFrames = (int)dsInfo.getDimensions()[0];
-					nCols = (int)dsInfo.getDimensions()[1];
-					nRows = (int)dsInfo.getDimensions()[2];
-					nLevels = (int)dsInfo.getDimensions()[3];
-					nChannels = (int)dsInfo.getDimensions()[4];   
-					IJ.log("Dimensions: " + String.valueOf(nFrames) + "x" + String.valueOf(nCols) + "x" 
-							+ String.valueOf(nRows) + "x" + String.valueOf(nLevels) + "x" + String.valueOf(nChannels));
-				} else {
-					IJ.error(" the data should have 5 dimensions");
-					IJ.log("Dimension Error: the data has " + String.valueOf(rank) + " dimensions" );
-					IJ.log("This plugin only works for 5 dimensional datasets");
-					IJ.log("Please use the HDF5 plugin:");
-					IJ.log("http://lmb.informatik.uni-freiburg.de/resources/opensource/imagej_plugins/hdf5.html");
-					return;
-				}
-				int sliceSize = nCols * nRows;
-	
-				if (typeText.equals( "uint8") && isRGB == false) {
-					
-					IJ.log("Bit-depth: " + String.valueOf(typeText));
-					IJ.log("Loading Data");
-					MDByteArray rawdata = reader.uint8().readMDArray(path);
-					byte[] flat_data = rawdata.getAsFlatArray();
-	
-	
-					imp = IJ.createHyperStack( name , 
-							nCols, nRows, nChannels, nLevels, nFrames, 8);
-	
-					for (int frame = 0; frame < nFrames; ++frame) {
-						for( int lev = 0; lev < nLevels; ++lev) {
-							for (int c = 0; c < nChannels; ++c) {
-	
-								ImageProcessor ip = imp.getStack().getProcessor(imp.getStackIndex(
-										c+1, lev+1, frame+1));
-								byte[] destData = (byte[])ip.getPixels();
-	
-								for (int x=0; x<nCols; x++) {
-									for (int y=0; y<nRows; y++) {
-										int scrIndex = c + lev*nChannels + y*nLevels*nChannels+ x*nLevels*nRows*nChannels + frame*nLevels*nCols*nRows*nChannels ;
-										int destIndex = y*nCols + x;
-										destData[destIndex] = flat_data[scrIndex];
-									}
-								}
-							}
-						}
-					}
-					maxGray = 255;
-					IJ.log("DONE");
-	
-				} else if (typeText.equals("uint16")){
-	
-					IJ.log("Bit-depth: " + String.valueOf(typeText));
-					IJ.log("Loading Data");
-					MDShortArray rawdata = reader.uint16().readMDArray(path);
-					short[] flat_data = rawdata.getAsFlatArray();
-	
-					imp = IJ.createHyperStack( name , 
-							nCols, nRows, nChannels, nLevels, nFrames, 16);
-	
-					for (int frame = 0; frame < nFrames; ++frame) {
-						for( int lev = 0; lev < nLevels; ++lev) {
-							for (int c = 0; c < nChannels; ++c) {
-	
-								ImageProcessor ip = imp.getStack().getProcessor(imp.getStackIndex(
-										c +1, lev+1, frame+1));
-								short[] destData = (short[])ip.getPixels();
-	
-								for (int x=0; x<nCols; x++) {
-									for (int y=0; y<nRows; y++) {
-										int scrIndex = c + lev*nChannels + y*nLevels*nChannels+ x*nLevels*nRows*nChannels + frame*nLevels*nCols*nRows*nChannels ;
-										int destIndex = y*nCols + x;
-										destData[destIndex] = flat_data[scrIndex];
-									}
-								}
-							}
-						}
-					}
-					
-		            for (int i = 0; i < flat_data.length; ++i) {
-		            	if (flat_data[i] > maxGray) maxGray = flat_data[i];
-		            }
-					IJ.log("DONE");
-	
-				} else if (typeText.equals("int16")){
-	
-					IJ.log("Bit-depth: " + String.valueOf(typeText));
-					IJ.log("Loading Data");
-					MDShortArray rawdata = reader.int16().readMDArray(path);
-					short[] flat_data = rawdata.getAsFlatArray();
-	
-					imp = IJ.createHyperStack( name , 
-							nCols, nRows, nChannels, nLevels, nFrames, 16);
-	
-					for (int frame = 0; frame < nFrames; ++frame) {
-						for( int lev = 0; lev < nLevels; ++lev) {
-							for (int c = 0; c < nChannels; ++c) {
-	
-								ImageProcessor ip = imp.getStack().getProcessor( imp.getStackIndex(
-										c +1, lev+1, frame+1));
-								short[] destData = (short[])ip.getPixels();
-	
-								for (int x=0; x<nCols; x++) {
-									for (int y=0; y<nRows; y++) {
-										int scrIndex = c + lev*nChannels + y*nLevels*nChannels+ x*nLevels*nRows*nChannels + frame*nLevels*nCols*nRows*nChannels ;
-										int destIndex = y*nCols + x;
-										destData[destIndex] = flat_data[scrIndex];
-									}
-								}
-							}
-						}
-					}
-		            for (int i = 0; i < flat_data.length; ++i) {
-		            	if (flat_data[i] > maxGray) maxGray = flat_data[i];
-		            }
-					IJ.log("DONE");
-				
-	        } else if (typeText.equals("float32") || typeText.equals("float64") ) {
-	        	
+				IJ.error(" the data should have 5 dimensions");
+				IJ.log("Dimension Error: the data has " + String.valueOf(rank) + " dimensions" );
+				IJ.log("This plugin only works for 5 dimensional datasets");
+				IJ.log("Please use the HDF5 plugin:");
+				IJ.log("http://lmb.informatik.uni-freiburg.de/resources/opensource/imagej_plugins/hdf5.html");
+				return;
+			}
+			int sliceSize = nCols * nRows;
+
+			if (typeText.equals( "uint8") && isRGB == false) {
+
 				IJ.log("Bit-depth: " + String.valueOf(typeText));
 				IJ.log("Loading Data");
-				MDFloatArray rawdata = reader.float32().readMDArray(path);
-				float[] flat_data = rawdata.getAsFlatArray();
-	
+				MDByteArray rawdata = reader.uint8().readMDArray(path);
+				byte[] flat_data = rawdata.getAsFlatArray();
+
+
 				imp = IJ.createHyperStack( name , 
-						nCols, nRows, nChannels, nLevels, nFrames, 32);
-	
+						nCols, nRows, nChannels, nLevels, nFrames, 8);
+
 				for (int frame = 0; frame < nFrames; ++frame) {
 					for( int lev = 0; lev < nLevels; ++lev) {
 						for (int c = 0; c < nChannels; ++c) {
-	
-							ImageProcessor ip = imp.getStack().getProcessor( imp.getStackIndex(
-									c +1, lev+1, frame+1));
-							float[] destData = (float[])ip.getPixels();
-	
+
+							ImageProcessor ip = imp.getStack().getProcessor(imp.getStackIndex(
+									c+1, lev+1, frame+1));
+							byte[] destData = (byte[])ip.getPixels();
+
 							for (int x=0; x<nCols; x++) {
 								for (int y=0; y<nRows; y++) {
 									int scrIndex = c + lev*nChannels + y*nLevels*nChannels+ x*nLevels*nRows*nChannels + frame*nLevels*nCols*nRows*nChannels ;
@@ -380,45 +301,143 @@ public class ilastik_import extends JFrame implements PlugIn, ActionListener {
 						}
 					}
 				}
-	            for (int i = 0; i < flat_data.length; ++i) {
-	            	if (flat_data[i] > maxGray) maxGray = flat_data[i];
-	            }
+				maxGray = 255;
 				IJ.log("DONE");
-	        	
-	        }
+
+			} else if (typeText.equals("uint16")){
+
+				IJ.log("Bit-depth: " + String.valueOf(typeText));
+				IJ.log("Loading Data");
+				MDShortArray rawdata = reader.uint16().readMDArray(path);
+				short[] flat_data = rawdata.getAsFlatArray();
+
+				imp = IJ.createHyperStack( name , 
+						nCols, nRows, nChannels, nLevels, nFrames, 16);
+
+				for (int frame = 0; frame < nFrames; ++frame) {
+					for( int lev = 0; lev < nLevels; ++lev) {
+						for (int c = 0; c < nChannels; ++c) {
+
+							ImageProcessor ip = imp.getStack().getProcessor(imp.getStackIndex(
+									c +1, lev+1, frame+1));
+							short[] destData = (short[])ip.getPixels();
+
+							for (int x=0; x<nCols; x++) {
+								for (int y=0; y<nRows; y++) {
+									int scrIndex = c + lev*nChannels + y*nLevels*nChannels+ x*nLevels*nRows*nChannels + frame*nLevels*nCols*nRows*nChannels ;
+									int destIndex = y*nCols + x;
+									destData[destIndex] = flat_data[scrIndex];
+								}
+							}
+						}
+					}
+				}
+
+				for (int i = 0; i < flat_data.length; ++i) {
+					if (flat_data[i] > maxGray) maxGray = flat_data[i];
+				}
+				IJ.log("DONE");
+
+			} else if (typeText.equals("int16")){
+
+				IJ.log("Bit-depth: " + String.valueOf(typeText));
+				IJ.log("Loading Data");
+				MDShortArray rawdata = reader.int16().readMDArray(path);
+				short[] flat_data = rawdata.getAsFlatArray();
+
+				imp = IJ.createHyperStack( name , 
+						nCols, nRows, nChannels, nLevels, nFrames, 16);
+
+				for (int frame = 0; frame < nFrames; ++frame) {
+					for( int lev = 0; lev < nLevels; ++lev) {
+						for (int c = 0; c < nChannels; ++c) {
+
+							ImageProcessor ip = imp.getStack().getProcessor( imp.getStackIndex(
+									c +1, lev+1, frame+1));
+							short[] destData = (short[])ip.getPixels();
+
+							for (int x=0; x<nCols; x++) {
+								for (int y=0; y<nRows; y++) {
+									int scrIndex = c + lev*nChannels + y*nLevels*nChannels+ x*nLevels*nRows*nChannels + frame*nLevels*nCols*nRows*nChannels ;
+									int destIndex = y*nCols + x;
+									destData[destIndex] = flat_data[scrIndex];
+								}
+							}
+						}
+					}
+				}
+				for (int i = 0; i < flat_data.length; ++i) {
+					if (flat_data[i] > maxGray) maxGray = flat_data[i];
+				}
+				IJ.log("DONE");
+
+			} else if (typeText.equals("float32") || typeText.equals("float64") ) {
+
+				IJ.log("Bit-depth: " + String.valueOf(typeText));
+				IJ.log("Loading Data");
+				MDFloatArray rawdata = reader.float32().readMDArray(path);
+				float[] flat_data = rawdata.getAsFlatArray();
+
+				imp = IJ.createHyperStack( name , 
+						nCols, nRows, nChannels, nLevels, nFrames, 32);
+
+				for (int frame = 0; frame < nFrames; ++frame) {
+					for( int lev = 0; lev < nLevels; ++lev) {
+						for (int c = 0; c < nChannels; ++c) {
+
+							ImageProcessor ip = imp.getStack().getProcessor( imp.getStackIndex(
+									c +1, lev+1, frame+1));
+							float[] destData = (float[])ip.getPixels();
+
+							for (int x=0; x<nCols; x++) {
+								for (int y=0; y<nRows; y++) {
+									int scrIndex = c + lev*nChannels + y*nLevels*nChannels+ x*nLevels*nRows*nChannels + frame*nLevels*nCols*nRows*nChannels ;
+									int destIndex = y*nCols + x;
+									destData[destIndex] = flat_data[scrIndex];
+								}
+							}
+						}
+					}
+				}
+				for (int i = 0; i < flat_data.length; ++i) {
+					if (flat_data[i] > maxGray) maxGray = flat_data[i];
+				}
+				IJ.log("DONE");
+
 			}
-			reader.close();
-			dispose();
-			
-		    for( int c = 1; c <= nChannels; ++c)
-		    {
-		    	imp.setC(c);
-		        imp.setDisplayRange(0,maxGray);
-		    }
-			
-			imp.show();
-		
-	    }
-	
-	
-	
+		}
+		reader.close();
+		dispose();
+
+		for( int c = 1; c <= nChannels; ++c)
+		{
+			imp.setC(c);
+			imp.setDisplayRange(0,maxGray);
+		}
+
+		imp.show();
+
+	}
+
+
+
 	public void showAbout() {
 		IJ.showMessage("ilastik Export",
 				"a template for export data into hdf5 for ilastik"
 				);
 	}
-	
-	  public void actionPerformed(ActionEvent event) 
-	  {
-	    if (event.getActionCommand().equals("load")) 
-	    {
-	      getData();
-	    }
-	    else if (event.getActionCommand().equals("cancel")) 
-	    {
-	      dispose();
-	    }
-	  }
+
+	public void actionPerformed(ActionEvent event) 
+	{
+		if (event.getActionCommand().equals("load")) 
+		{
+			getData();
+		}
+		else if (event.getActionCommand().equals("cancel")) 
+		{
+			dispose();
+		}
+	}
 
 	/**
 	 * Main method for debugging.

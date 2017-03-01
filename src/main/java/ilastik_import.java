@@ -202,10 +202,10 @@ public class ilastik_import extends JFrame implements PlugIn, ActionListener {
 			
 			if (reader.object().getDataSetInformation(dataSets[i]).getRank() == 5){
 				
-				dataSetBox.addItem(new comboBoxDimensions(dataSets[i], "loadable"));
+				dataSetBox.addItem(new comboBoxDimensions(dataSets[i], "+"));
 			}
 			else{
-				dataSetBox.addItem(new comboBoxDimensions(dataSets[i], "wrong dim"));
+				dataSetBox.addItem(new comboBoxDimensions(dataSets[i], "-"));
 			}
 			
 		}

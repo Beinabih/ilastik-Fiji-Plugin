@@ -67,7 +67,7 @@ public class ilastik_export implements PlugInFilter {
 	    
 	    compressionLevel = (int)(gd.getNextNumber());
 	    
-	    SaveDialog sd = new SaveDialog("Save to HDF5 (new or replace)...", OpenDialog.getLastDirectory(), ".h5");
+	    SaveDialog sd = new SaveDialog("Save to HDF5 (new or replace)...","data",".h5");
 	      String directory = sd.getDirectory();
 	      String name = sd.getFileName();
 	      if (name == null)
@@ -144,7 +144,7 @@ public class ilastik_export implements PlugInFilter {
 		            }
 
 		        IJ.log("write uint8 hdf5");
-	        	writer.uint8().writeMDArray( "export_data", arr, HDF5IntStorageFeatures.createDeflationDelete(compressionLevel));
+	        	writer.uint8().writeMDArray( "exported_data", arr, HDF5IntStorageFeatures.createDeflationDelete(compressionLevel));
 	        	IJ.log("compressionLevel: " + String.valueOf(compressionLevel));
 	        	IJ.log("Done");
 	        }
@@ -178,7 +178,7 @@ public class ilastik_export implements PlugInFilter {
 	                }
 	            }
 	            IJ.log("write uint16 hdf5");
-	        	writer.uint16().writeMDArray( "export_data", arr, HDF5IntStorageFeatures.createDeflationDelete(compressionLevel));
+	        	writer.uint16().writeMDArray( "exported_data", arr, HDF5IntStorageFeatures.createDeflationDelete(compressionLevel));
 	        	IJ.log("compressionLevel: " + String.valueOf(compressionLevel));
 	        	IJ.log("Done");
             }
@@ -211,7 +211,7 @@ public class ilastik_export implements PlugInFilter {
 	                }
 	            }
 	            IJ.log("write float32 hdf5");
-	        	writer.float32().writeMDArray( "export_data", arr, HDF5FloatStorageFeatures.createDeflationDelete(compressionLevel));
+	        	writer.float32().writeMDArray( "exported_data", arr, HDF5FloatStorageFeatures.createDeflationDelete(compressionLevel));
 	        	IJ.log("compressionLevel: " + String.valueOf(compressionLevel));
 	        	IJ.log("Done");	
             } 
@@ -269,7 +269,7 @@ public class ilastik_export implements PlugInFilter {
 			                }
 			            }
 			            IJ.log("write uint8 RGB HDF5");
-			            writer.uint8().writeMDArray( "export_data", arr, HDF5IntStorageFeatures.createDeflationDelete(compressionLevel));
+			            writer.uint8().writeMDArray( "exported_data", arr, HDF5IntStorageFeatures.createDeflationDelete(compressionLevel));
 			        	IJ.log("compressionLevel: " + String.valueOf(compressionLevel));
 			        	IJ.log("Done");
 

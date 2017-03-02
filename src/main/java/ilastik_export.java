@@ -6,6 +6,7 @@ import ch.systemsx.cisd.base.mdarray.MDShortArray;
 import ch.systemsx.cisd.hdf5.HDF5Factory;
 import ch.systemsx.cisd.hdf5.HDF5FloatStorageFeatures;
 import ch.systemsx.cisd.hdf5.HDF5IntStorageFeatures;
+import ch.systemsx.cisd.hdf5.IHDF5Reader;
 import ch.systemsx.cisd.hdf5.IHDF5Writer;
 import ij.IJ;
 import ij.ImageJ;
@@ -57,6 +58,17 @@ public class ilastik_export implements PlugInFilter {
 	@Override
 	public void run(ImageProcessor ip) {
 	    String filename;
+	    
+	    int dim = image.getNDimensions();
+	    if (dim <= 3)
+	    {
+		    GenericDialog g = new GenericDialog("Warning");
+		    g.addMessage("Be careful how you choose your axes order (standart: txyzc).\nScrollabale axes"
+		    		+ " t (frames) and z (slices) can be easily mistaken.\nFor changing their order go to"
+		    		+ " Image -> Properties");
+		    g.showDialog();
+		    if (g.wasCanceled()) return;
+	    }
 	    
 	    GenericDialog gd = new GenericDialog("Save as HDF5");
 	    gd.addMessage("Choose Compression level (0-9):");

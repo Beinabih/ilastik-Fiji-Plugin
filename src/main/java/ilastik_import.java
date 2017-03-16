@@ -423,7 +423,7 @@ public class ilastik_import extends JFrame implements PlugIn, ActionListener {
 
 	public void showAbout() {
 		IJ.showMessage("ilastik Export",
-				"a template for export data into hdf5 for ilastik"
+				"a template for Import data into hdf5 for ilastik"
 				);
 	}
 

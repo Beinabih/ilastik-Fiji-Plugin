@@ -261,6 +261,9 @@ public class ilastik_import extends JFrame implements PlugIn, ActionListener {
 				nChannels = (int)dsInfo.getDimensions()[4];   
 				IJ.log("Dimensions: " + String.valueOf(nFrames) + "x" + String.valueOf(nCols) + "x" 
 						+ String.valueOf(nRows) + "x" + String.valueOf(nLevels) + "x" + String.valueOf(nChannels));
+				if (nChannels == 3) {
+					isRGB = true;
+				}
 			} else {
 			
 				IJ.error(" the data should have 5 dimensions");
@@ -303,6 +306,45 @@ public class ilastik_import extends JFrame implements PlugIn, ActionListener {
 				}
 				maxGray = 255;
 				IJ.log("DONE");
+			}
+				
+				else if (typeText.equals( "uint8") && isRGB == true) {
+
+					IJ.log("Bit-depth: " + String.valueOf(typeText));
+					IJ.log("Loading Data");
+					MDByteArray rawdata = reader.uint8().readMDArray(path);
+					byte[] flat_data = rawdata.getAsFlatArray();
+
+
+					imp = IJ.createHyperStack( name , 
+							nCols, nRows, nChannels, nLevels, nFrames, 24);
+
+					for (int frame = 0; frame < nFrames; ++frame) {
+						for( int lev = 0; lev < nLevels; ++lev) {
+							for (int c = 0; c < nChannels; ++c) {
+
+								ImageProcessor ip = imp.getStack().getProcessor(imp.getStackIndex(
+										c+1, lev+1, frame+1));
+								int[] destData = (int[])ip.getPixels();
+								int srcOffset = frame*lev*sliceSize*3;
+
+								for (int x=0; x<nCols; x++) {
+									for (int y=0; y<nRows; y++) {
+										int scrIndex = lev*nChannels + y*nLevels*nChannels+ x*nLevels*nRows*nChannels + frame*nLevels*nCols*nRows*nChannels ;
+										int destIndex = y*nCols + x;
+										int red   = flat_data[scrIndex] & 0xff;
+										int green   = flat_data[scrIndex + 1] & 0xff;
+										int blue  = flat_data[scrIndex +2 ] & 0xff;
+										destData[destIndex] = (red<<16) + (green<<8) + blue;
+									}
+								}
+							}
+						}
+					}
+					
+					
+					maxGray = 255;
+					IJ.log("DONE");
 
 			} else if (typeText.equals("uint16")){
 

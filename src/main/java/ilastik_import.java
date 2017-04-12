@@ -17,6 +17,8 @@ import ncsa.hdf.hdf5lib.exceptions.HDF5Exception;
 import ch.systemsx.cisd.base.mdarray.MDAbstractArray;
 import ch.systemsx.cisd.base.mdarray.MDByteArray;
 import ch.systemsx.cisd.base.mdarray.MDFloatArray;
+import ch.systemsx.cisd.base.mdarray.MDIntArray;
+import ch.systemsx.cisd.base.mdarray.MDLongArray;
 import ch.systemsx.cisd.base.mdarray.MDShortArray;
 import ch.systemsx.cisd.hdf5.HDF5DataSetInformation;
 import ch.systemsx.cisd.hdf5.HDF5DataTypeInformation;
@@ -27,6 +29,7 @@ import ch.systemsx.cisd.hdf5.HDF5LinkInformation;
 import ch.systemsx.cisd.hdf5.IHDF5Reader;
 import ch.systemsx.cisd.hdf5.IHDF5ReaderConfigurator;
 import ch.systemsx.cisd.hdf5.IHDF5Writer;
+import ch.systemsx.cisd.hdf5.UnsignedIntUtils;
 import ij.IJ;
 import ij.ImageJ;
 import ij.ImagePlus;
@@ -42,7 +45,7 @@ import java.util.Vector;
 import javax.swing.*;
 
 /**
- * ilastik export
+ * ilastik Import
  *
  * A template for import HDf5 of either
  * GRAY8, GRAY16, GRAY32 or COLOR_RGB images.
@@ -62,6 +65,7 @@ public class ilastik_import extends JFrame implements PlugIn, ActionListener {
 	private IHDF5Reader reader;
 	private JComboBox dataSetBox;
 	private JFrame errorWindow;
+	private  boolean isList;
 
 
 	// plugin parameters
@@ -110,7 +114,16 @@ public class ilastik_import extends JFrame implements PlugIn, ActionListener {
 			this.reader = HDF5Factory.openForReading(fullFileName_);
 			String path = "/";
 			findData(reader, path);
-			chooseData(reader, datasetList);
+			if (datasetList.size() == 1)
+			{
+				lookupWindow();
+				this.isList = false;
+			}
+			else
+			{
+				chooseData(reader, datasetList);
+				this.isList = true;
+			}
 
 
 		}
@@ -218,12 +231,31 @@ public class ilastik_import extends JFrame implements PlugIn, ActionListener {
 		getContentPane().add(b1, BorderLayout.LINE_START );
 		getContentPane().add(b2, BorderLayout.LINE_END);
 		setResizable(false);
+		setLocationRelativeTo(null);
 		pack();
 		setVisible(true);
 
 	}
+	
+	public void lookupWindow(){
+		JButton l1 = new JButton("Load Raw");
+		l1.setActionCommand("Load Raw");
+		l1.addActionListener(this);
+		JButton l2 = new JButton("Load LUT");
+		l2.setActionCommand("Load LUT");
+		l2.addActionListener(this);
+		
+		getContentPane().add(l1, BorderLayout.LINE_START );
+		getContentPane().add(l2, BorderLayout.LINE_END);
+		setResizable(false);
+		setLocationRelativeTo(null);
+		pack();
+		setVisible(true);
+		
+		
+	}
 
-	public void getData(){
+	public void getData(boolean isList, List<String> datasetList){
 		int rank      = 0;
 		int nLevels   = 0;
 		int nRows     = 0;
@@ -232,14 +264,20 @@ public class ilastik_import extends JFrame implements PlugIn, ActionListener {
 		int nFrames = 0 ;
 		double maxGray = 1;
 		String path;
+		String boxInfo;
 
 		boolean isRGB = false;
 		ImagePlus imp = null;
 
-
-		String boxInfo = (String)dataSetBox.getSelectedItem();
-		String[] parts = boxInfo.split(":");
-		path = parts[1].replaceAll("\\s+","");
+		if (isList){
+			boxInfo = (String)dataSetBox.getSelectedItem();
+			String[] parts = boxInfo.split(":");
+			path = parts[1].replaceAll("\\s+","");
+		}
+		else{
+			path = datasetList.get(0);
+		}
+		
 		
 		IJ.log(path);
 
@@ -412,6 +450,40 @@ public class ilastik_import extends JFrame implements PlugIn, ActionListener {
 					if (flat_data[i] > maxGray) maxGray = flat_data[i];
 				}
 				IJ.log("DONE");
+				
+			} else if (typeText.equals("uint32")){
+				//uint32 will be converted to float32
+
+				IJ.log("Bit-depth: " + String.valueOf(typeText));
+				IJ.log("Loading Data");
+				MDIntArray rawdata = reader.uint32().readMDArray(path);
+				int[] flat_data = rawdata.getAsFlatArray();
+
+				imp = IJ.createHyperStack( name , 
+						nCols, nRows, nChannels, nLevels, nFrames, 32);
+
+				for (int frame = 0; frame < nFrames; ++frame) {
+					for( int lev = 0; lev < nLevels; ++lev) {
+						for (int c = 0; c < nChannels; ++c) {
+
+							ImageProcessor ip = imp.getStack().getProcessor( imp.getStackIndex(
+									c +1, lev+1, frame+1));
+							float[] destData = (float[]) ip.getPixels();
+
+							for (int x=0; x<nCols; x++) {
+								for (int y=0; y<nRows; y++) {
+									int scrIndex = c + lev*nChannels + y*nLevels*nChannels+ x*nLevels*nRows*nChannels + frame*nLevels*nCols*nRows*nChannels ;
+									int destIndex = y*nCols + x;
+									destData[destIndex] = flat_data[scrIndex];
+								}
+							}
+						}
+					}
+				}
+				for (int i = 0; i < flat_data.length; ++i) {
+					if (flat_data[i] > maxGray) maxGray = flat_data[i];
+				}
+				IJ.log("DONE");
 
 			} else if (typeText.equals("float32") || typeText.equals("float64") ) {
 
@@ -473,11 +545,20 @@ public class ilastik_import extends JFrame implements PlugIn, ActionListener {
 	{
 		if (event.getActionCommand().equals("load")) 
 		{
-			getData();
+			lookupWindow();
 		}
 		else if (event.getActionCommand().equals("cancel")) 
 		{
 			dispose();
+		}
+		else if (event.getActionCommand().equals("Load Raw"))
+		{
+			getData(isList, datasetList);
+		}
+		else if (event.getActionCommand().equals("Load LUT"))
+		{
+			getData(isList, datasetList);
+			IJ.run("3-3-2 RGB");
 		}
 	}
 

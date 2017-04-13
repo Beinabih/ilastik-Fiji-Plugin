@@ -108,6 +108,9 @@ public class ilastik_import extends JFrame implements PlugIn, ActionListener {
 		IJ.showStatus("Loading HDF5 File: " + fullFileName_);
 
 		this.datasetList = new ArrayList<String>();
+		this.name = name;
+		
+
 
 		try
 		{
@@ -528,7 +531,8 @@ public class ilastik_import extends JFrame implements PlugIn, ActionListener {
 			imp.setC(c);
 			imp.setDisplayRange(0,maxGray);
 		}
-
+		IJ.log(name);
+		imp.setTitle(name);
 		imp.show();
 
 	}

@@ -32,6 +32,8 @@ import ij.io.SaveDialog;
 import ij.plugin.filter.PlugInFilter;
 import ij.process.ColorProcessor;
 import ij.process.ImageProcessor;
+import ij.io.FileInfo;
+import ij.macro.*;
 
 /**
  * ilastik export
@@ -66,6 +68,7 @@ public class ilastik_export implements PlugInFilter {
 
 
 		image = imp;
+		
 		return DOES_8G + DOES_8C + DOES_16 + DOES_32 + DOES_RGB + NO_CHANGES;
 	}
 
@@ -95,9 +98,9 @@ public class ilastik_export implements PlugInFilter {
 		gd.showDialog();
 		if (gd.wasCanceled()) return;
 
-		compressionLevel = (int)(gd.getNextNumber());
 
-		SaveDialog sd = new SaveDialog("Save to HDF5 (new or replace)...","data",".h5");
+		compressionLevel = (int)(gd.getNextNumber());
+		SaveDialog sd = new SaveDialog("Save to HDF5 (new or replace)...",image.getShortTitle(),".h5");
 		String directory = sd.getDirectory();
 		String name = sd.getFileName();
 		if (name == null)
@@ -518,8 +521,8 @@ public class ilastik_export implements PlugInFilter {
 		// start ImageJ
 		new ImageJ();
 
-		//		ImagePlus image = IJ.openImage("/Users/jmassa/Documents/ilastik/datasets/3D_LargeWhirl.tif");
-		//		ImagePlus image = IJ.openImage("/Users/jmassa/Documents/MaMut_project/rapoport/raw.tif");
+//				ImagePlus image = IJ.openImage("/Users/jmassa/Documents/ilastik/datasets/3D_LargeWhirl.tif");
+//				ImagePlus image = IJ.openImage("/Users/jmassa/Documents/MaMut_project/rapoport/raw.tif");
 		//		ImagePlus image = IJ.openImage("/Users/jmassa/Documents/MaMut_project/drosophila/ilastik_export/Raw_Data_0_10.tif");
 		//		ImagePlus image = IJ.openImage("/Users/chaubold/hci/data/virginie/Number3/MI_Substack (1-170).tif");
 		//		ImagePlus image = IJ.openImage("/Users/jmassa/Documents/workspace/plugin_test/droso.h5");

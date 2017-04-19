@@ -94,7 +94,7 @@ class IlastikHDF5Access implements IIlastikHDF5Access
 		if ( all5Dimensions != null )
 		{
 			long[] dimensions = new long[]{all5Dimensions[1], all5Dimensions[2], all5Dimensions[3]};
-			return new DimsAndExistence( dimensions, true );
+			return new DimsAndExistence(reorder(dimensions), true );
 		}
 		else
 			return new DimsAndExistence( new long[] { 1, 1, 1 }, false );

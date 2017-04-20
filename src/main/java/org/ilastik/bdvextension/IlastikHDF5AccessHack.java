@@ -161,7 +161,8 @@ class IlastikHDF5AccessHack implements IIlastikHDF5Access
 		if ( all5Dimensions != null )
 		{
 			long[] dimensions = new long[]{all5Dimensions[1], all5Dimensions[2], all5Dimensions[3]};
-			return new DimsAndExistence( dimensions, true );
+			IJ.log( String.valueOf(all5Dimensions[1]) + "x" + String.valueOf(all5Dimensions[2]) + "x" +  String.valueOf(all5Dimensions[3]))
+			return new DimsAndExistence( dimensions, true ); //reorder?
 		}
 		else
 			return new DimsAndExistence( new long[] { 1, 1, 1 }, false );

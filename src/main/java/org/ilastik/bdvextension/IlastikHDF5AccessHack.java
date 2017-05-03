@@ -161,8 +161,8 @@ class IlastikHDF5AccessHack implements IIlastikHDF5Access
 		if ( all5Dimensions != null )
 		{
 			long[] dimensions = new long[]{all5Dimensions[1], all5Dimensions[2], all5Dimensions[3]};
-			IJ.log( String.valueOf(all5Dimensions[1]) + "x" + String.valueOf(all5Dimensions[2]) + "x" +  String.valueOf(all5Dimensions[3]))
-			return new DimsAndExistence( dimensions, true ); //reorder?
+			IJ.log( String.valueOf(" getDimsAndExistence" + all5Dimensions[1]) + "x" + String.valueOf(all5Dimensions[2]) + "x" +  String.valueOf(all5Dimensions[3]));
+			return new DimsAndExistence(reorder(dimensions), true ); //reorder?
 		}
 		else
 			return new DimsAndExistence( new long[] { 1, 1, 1 }, false );
@@ -182,6 +182,7 @@ class IlastikHDF5AccessHack implements IIlastikHDF5Access
 		if ( Thread.interrupted() )
 			throw new InterruptedException();
 		Util.reorder( dimensions, reorderedDimensions );
+//		intToLong(dimensions, reorderedDimensions);
 		Util.reorder( min, reorderedMin );
 		long[] useDims = get5DimsFrom3Dims(reorderedDimensions);
 		long[] useMins = get5DMinsFrom3Mins(reorderedMin, timepoint, setup);
@@ -219,6 +220,7 @@ class IlastikHDF5AccessHack implements IIlastikHDF5Access
 		if ( Thread.interrupted() )
 			throw new InterruptedException();
 		Util.reorder( dimensions, reorderedDimensions );
+//		intToLong(dimensions, reorderedDimensions);
 		Util.reorder( min, reorderedMin );
 		long[] useDims = get5DimsFrom3Dims(reorderedDimensions);
 		long[] useMins = get5DMinsFrom3Mins(reorderedMin, timepoint, setup);
@@ -244,6 +246,8 @@ class IlastikHDF5AccessHack implements IIlastikHDF5Access
 			throw new InterruptedException();
 		Util.reorder( dimensions, reorderedDimensions );
 		Util.reorder( min, reorderedMin );
+//		intToLong(dimensions, reorderedDimensions);
+		IJ.log( String.valueOf("readFloatArray" + reorderedDimensions[0]) + "x" + String.valueOf(reorderedDimensions[1]) + "x" +  String.valueOf(reorderedDimensions[2]));
 		long[] useDims = get5DimsFrom3Dims(reorderedDimensions);
 		long[] useMins = get5DMinsFrom3Mins(reorderedMin, timepoint, setup);
 
@@ -253,5 +257,13 @@ class IlastikHDF5AccessHack implements IIlastikHDF5Access
 		H5Sclose( memorySpaceId );
 
 		return dataBlock;
+	}
+	
+	public static long[] intToLong( final int[] in, final long[] out )
+	{
+		assert in.length == out.length;
+		for ( int i = 0; i < in.length; ++i)
+			out[ i ] = in[ i ];
+		return out;
 	}
 }

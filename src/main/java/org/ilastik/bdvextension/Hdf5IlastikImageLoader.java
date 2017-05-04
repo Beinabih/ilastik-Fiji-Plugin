@@ -16,8 +16,10 @@ import bdv.img.cache.VolatileImgCells;
 import bdv.img.cache.VolatileImgCells.CellCache;
 import bdv.img.hdf5.DimsAndExistence;
 import bdv.img.hdf5.Hdf5ImageLoader;
+import bdv.img.hdf5.Util;
 import ch.systemsx.cisd.hdf5.HDF5Factory;
 import ch.systemsx.cisd.hdf5.IHDF5Reader;
+import ij.IJ;
 import mpicbg.spim.data.generic.sequence.ImgLoaderHint;
 import net.imglib2.RandomAccessibleInterval;
 import net.imglib2.Volatile;
@@ -52,6 +54,8 @@ public class Hdf5IlastikImageLoader<T extends NativeType< T >, V extends Volatil
 	private final long[] imageDimensions;
 
 	private final int[] blockDimensions;
+	
+	private final long[] reorderedDims  = new long[ 3 ]; 
 
 	private VolatileGlobalCellCache cache;
 	private CacheArrayLoader< A > loader;
@@ -80,6 +84,7 @@ public class Hdf5IlastikImageLoader<T extends NativeType< T >, V extends Volatil
 		this.loader = dataType.createArrayLoader( hdf5Access );
 		DimsAndExistence dimsAndExistence = hdf5Access.getDimsAndExistence(null);
 		this.imageDimensions = dimsAndExistence.getDimensions();
+		
 		this.blockDimensions = new int[]{32,32,32};
 
 		this.cache = new VolatileGlobalCellCache( numScales, 1 );
@@ -97,7 +102,6 @@ public class Hdf5IlastikImageLoader<T extends NativeType< T >, V extends Volatil
 			final LoadingStrategy loadingStrategy )
 	{
 		final long[] dimensions = imageDimensions;
-
 		final int priority = numScales - 1 - level;
 		final CacheHints cacheHints = new CacheHints( loadingStrategy, priority, false );
 		final CellCache< A > c = cache.new VolatileCellCache<>( timepointId, setupId, level, cacheHints, this.loader );

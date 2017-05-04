@@ -62,7 +62,8 @@ class IlastikHDF5Access implements IIlastikHDF5Access
 		
 		long[] dimensions = extract5Dimensions();
 //		IJ.log("Found dataset of size [" + String.valueOf(dimensions[0]) + ", " + String.valueOf(dimensions[1]) 
-//		   + ", " + String.valueOf(dimensions[2]) + ", " + String.valueOf(dimensions[3]) + ", " + String.valueOf(dimensions[4]) + ", ");
+//		+ ", " + String.valueOf(dimensions[2]) + ", " + String.valueOf(dimensions[3]) + ", " + String.valueOf(dimensions[4]) + ", ");
+		
 		if( dimensions != null )
 		{
 			this.numTimesteps = dimensions[0];
@@ -94,7 +95,7 @@ class IlastikHDF5Access implements IIlastikHDF5Access
 		if ( all5Dimensions != null )
 		{
 			long[] dimensions = new long[]{all5Dimensions[1], all5Dimensions[2], all5Dimensions[3]};
-			return new DimsAndExistence(reorder(dimensions), true );
+			return new DimsAndExistence(reorder(dimensions), true );//reorder
 		}
 		else
 			return new DimsAndExistence( new long[] { 1, 1, 1 }, false );
@@ -136,7 +137,7 @@ class IlastikHDF5Access implements IIlastikHDF5Access
 		
 		Util.reorder( dimensions, reorderedDimensions );
 		Util.reorder( min, reorderedMin );
-		final MDShortArray array = hdf5Reader.uint16().readMDArrayBlockWithOffset( this.dataset, get5DimsFrom3Dims(reorderedDimensions), get5DMinsFrom3Mins(reorderedMin, timepoint, setup) );
+		final MDShortArray array = hdf5Reader.uint16().readMDArrayBlockWithOffset( this.dataset, get5DimsFrom3Dims(dimensions), get5DMinsFrom3Mins(min, timepoint, setup) );
 		return array.getAsFlatArray();
 	}
 
@@ -181,7 +182,8 @@ class IlastikHDF5Access implements IIlastikHDF5Access
 	@Override
 	public synchronized float[] readFloatMDArrayBlockWithOffset( final int timepoint, final int setup, final int level, final int[] dimensions, final long[] min, final float[] dataBlock ) throws InterruptedException
 	{
-		System.arraycopy( readShortMDArrayBlockWithOffset( timepoint, setup, level, dimensions, min ), 0, dataBlock, 0, dataBlock.length );
+
+		System.arraycopy( readFloatMDArrayBlockWithOffset( timepoint, setup, level, dimensions , min ), 0, dataBlock, 0, dataBlock.length );
 		return dataBlock;
 	}
 
@@ -194,5 +196,13 @@ class IlastikHDF5Access implements IIlastikHDF5Access
 	{
 		closeAllDataSets();
 		hdf5Reader.close();
+	}
+	
+	public static long[] intToLong( final int[] in, final long[] out )
+	{
+		assert in.length == out.length;
+		for ( int i = 0; i < in.length; ++i)
+			out[ i ] = in[ i ];
+		return out;
 	}
 }

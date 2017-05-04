@@ -2,12 +2,15 @@ package org.ilastik.bdvextension;
 
 import net.imglib2.img.basictypeaccess.volatiles.array.VolatileFloatArray;
 import bdv.img.cache.CacheArrayLoader;
+import bdv.img.hdf5.Util;
+import ij.IJ;
 
 public class IlastikVolatileFloatArrayLoader implements CacheArrayLoader< VolatileFloatArray >
 {
 	private final IIlastikHDF5Access hdf5Access;
 
 	private VolatileFloatArray theEmptyArray;
+	
 
 	public IlastikVolatileFloatArrayLoader( final IIlastikHDF5Access hdf5Access )
 	{

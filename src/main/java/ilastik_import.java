@@ -64,9 +64,14 @@ public class ilastik_import extends JFrame implements PlugIn, ActionListener {
 	private  List<String> datasetList;
 	private IHDF5Reader reader;
 	private JComboBox dataSetBox;
+	private JComboBox dimBox;
 	private JFrame errorWindow;
-	private  boolean isList;
-
+	private boolean isList;
+	private JFrame frame;
+	private JFrame frame2;
+	private JPanel panel;
+	private JPanel panel2;
+	private String dimensionOrder;
 
 	// plugin parameters
 	public double value;
@@ -119,7 +124,8 @@ public class ilastik_import extends JFrame implements PlugIn, ActionListener {
 			findData(reader, path);
 			if (datasetList.size() == 1)
 			{
-				lookupWindow();
+//				lookupWindow();
+				dimensionWindow();
 				this.isList = false;
 			}
 			else
@@ -241,6 +247,8 @@ public class ilastik_import extends JFrame implements PlugIn, ActionListener {
 	}
 	
 	public void lookupWindow(){
+		
+		frame = new JFrame();
 		JButton l1 = new JButton("Load Raw");
 		l1.setActionCommand("Load Raw");
 		l1.addActionListener(this);
@@ -248,17 +256,56 @@ public class ilastik_import extends JFrame implements PlugIn, ActionListener {
 		l2.setActionCommand("Load LUT");
 		l2.addActionListener(this);
 		
-		getContentPane().add(l1, BorderLayout.LINE_START );
-		getContentPane().add(l2, BorderLayout.LINE_END);
-		setResizable(false);
-		setLocationRelativeTo(null);
-		pack();
-		setVisible(true);
+//		panel = new JPanel();
+//		
+//		panel.add(l1);
+//		panel.add(l2);
+//		
+		frame.getContentPane().add(l1, BorderLayout.LINE_START );
+		frame.getContentPane().add(l2, BorderLayout.LINE_END);
+		frame.setResizable(false);
+		frame.setLocationRelativeTo(null);
+		frame.pack();
+		frame.setVisible(true);
+		
+		
+	}
+	
+	public void dimensionWindow(){
+		
+		frame2 = new JFrame();
+		
+		JButton k1 = new JButton("Load");
+		k1.setActionCommand("load2");
+		k1.addActionListener(this);
+		JButton k2 = new JButton("Cancel");
+		k2.setActionCommand("cancel2");
+		k2.addActionListener(this);
+		
+		String[] dimExamples = {
+		         "txyzc",
+		         "xyzc",
+		         "xyc",
+		};
+		
+		this.dimBox = new JComboBox(dimExamples);
+		dimBox.setEditable(true);
+		dimBox.addActionListener(this);
+		
+		frame2.getContentPane().add(dimBox, BorderLayout.PAGE_START);
+		frame2.getContentPane().add(k1, BorderLayout.LINE_START );
+		frame2.getContentPane().add(k2, BorderLayout.LINE_END);
+		frame2.setResizable(false);
+		frame2.setLocationRelativeTo(null);
+		frame2.pack();
+		frame2.setVisible(true);
+		
+		IJ.log("This version supports images with fewer dimensions which have the order txyzc");
 		
 		
 	}
 
-	public void getData(boolean isList, List<String> datasetList){
+	public void getData( List<String> datasetList, String dimensionOrder){
 		int rank      = 0;
 		int nLevels   = 0;
 		int nRows     = 0;
@@ -272,17 +319,19 @@ public class ilastik_import extends JFrame implements PlugIn, ActionListener {
 		boolean isRGB = false;
 		ImagePlus imp = null;
 
-		if (isList){
+		if (this.isList){
 			boxInfo = (String)dataSetBox.getSelectedItem();
 			String[] parts = boxInfo.split(":");
 			path = parts[1].replaceAll("\\s+","");
+			IJ.log(boxInfo);
 		}
 		else{
 			path = datasetList.get(0);
+//			IJ.log(path);
 		}
 		
-		
-		IJ.log(path);
+//		IJ.log(path);
+//		IJ.log(String.valueOf(isList));
 
 		HDF5DataSetInformation dsInfo = reader.object().getDataSetInformation(path);
 
@@ -293,27 +342,61 @@ public class ilastik_import extends JFrame implements PlugIn, ActionListener {
 
 			//	              get type information
 			String typeText = getInfo(dsInfo);
+			
 
-			if (rank == 5) {
-				nFrames = (int)dsInfo.getDimensions()[0];
-				nCols = (int)dsInfo.getDimensions()[1];
-				nRows = (int)dsInfo.getDimensions()[2];
-				nLevels = (int)dsInfo.getDimensions()[3];
-				nChannels = (int)dsInfo.getDimensions()[4];   
-				IJ.log("Dimensions: " + String.valueOf(nFrames) + "x" + String.valueOf(nCols) + "x" 
-						+ String.valueOf(nRows) + "x" + String.valueOf(nLevels) + "x" + String.valueOf(nChannels));
-				if (nChannels == 3) {
+				nCols = 1;
+				nRows = 1;
+				nLevels = 1;
+				nChannels = 1;
+				nFrames = 1;
+				
+				for(int index =0; index < dimensionOrder.length(); index++){
+					
+					char axis = dimensionOrder.charAt(index);
+					
+					if (axis == 't'){
+						nFrames = (int)dsInfo.getDimensions()[index];
+					}
+					if (axis == 'x'){
+						nCols = (int)dsInfo.getDimensions()[index];
+					}
+					if (axis == 'y'){
+						nRows = (int)dsInfo.getDimensions()[index];
+					}
+					if (axis == 'z'){
+						nLevels = (int)dsInfo.getDimensions()[index];
+					}
+					if (axis == 'c'){
+						nChannels = (int)dsInfo.getDimensions()[index];
+					}
+					
+					if (nChannels == 3) {
 					isRGB = true;
 				}
-			} else {
-			
-				IJ.error(" the data should have 5 dimensions");
-				IJ.log("Dimension Error: the data has " + String.valueOf(rank) + " dimensions" );
-				IJ.log("This plugin only works for 5 dimensional datasets");
-				IJ.log("Please use the HDF5 plugin:");
-				IJ.log("http://lmb.informatik.uni-freiburg.de/resources/opensource/imagej_plugins/hdf5.html");
-				return;
-			}
+					
+				}
+				
+
+//			if (rank == 5) {
+//				nFrames = (int)dsInfo.getDimensions()[0];
+//				nCols = (int)dsInfo.getDimensions()[1];
+//				nRows = (int)dsInfo.getDimensions()[2];
+//				nLevels = (int)dsInfo.getDimensions()[3];
+//				nChannels = (int)dsInfo.getDimensions()[4];   
+//				IJ.log("Dimensions: " + String.valueOf(nFrames) + "x" + String.valueOf(nCols) + "x" 
+//						+ String.valueOf(nRows) + "x" + String.valueOf(nLevels) + "x" + String.valueOf(nChannels));
+//				if (nChannels == 3) {
+//					isRGB = true;
+//				}
+//			} else {
+//
+//				IJ.error(" the data should have 5 dimensions");
+//				IJ.log("Dimension Error: the data has " + String.valueOf(rank) + " dimensions" );
+//				IJ.log("This plugin only works for 5 dimensional datasets");
+//				IJ.log("Please use the HDF5 plugin:");
+//				IJ.log("http://lmb.informatik.uni-freiburg.de/resources/opensource/imagej_plugins/hdf5.html");
+//				return;
+//			}
 			int sliceSize = nCols * nRows;
 
 			if (typeText.equals( "uint8") && isRGB == false) {
@@ -337,7 +420,9 @@ public class ilastik_import extends JFrame implements PlugIn, ActionListener {
 
 							for (int x=0; x<nCols; x++) {
 								for (int y=0; y<nRows; y++) {
+										
 									int scrIndex = c + lev*nChannels + y*nLevels*nChannels+ x*nLevels*nRows*nChannels + frame*nLevels*nCols*nRows*nChannels ;
+//									int scrIndex = c + x*nChannels + y*nCols*nChannels+ lev*nCols*nRows*nChannels + frame*nLevels*nCols*nRows*nChannels ;
 									int destIndex = y*nCols + x;
 									destData[destIndex] = flat_data[scrIndex];
 								}
@@ -367,14 +452,13 @@ public class ilastik_import extends JFrame implements PlugIn, ActionListener {
 								ImageProcessor ip = imp.getStack().getProcessor(imp.getStackIndex(
 										c+1, lev+1, frame+1));
 								int[] destData = (int[])ip.getPixels();
-								int srcOffset = frame*lev*sliceSize*3;
 
 								for (int x=0; x<nCols; x++) {
 									for (int y=0; y<nRows; y++) {
 										int scrIndex = lev*nChannels + y*nLevels*nChannels+ x*nLevels*nRows*nChannels + frame*nLevels*nCols*nRows*nChannels ;
 										int destIndex = y*nCols + x;
 										int red   = flat_data[scrIndex] & 0xff;
-										int green   = flat_data[scrIndex + 1] & 0xff;
+										int green = flat_data[scrIndex + 1] & 0xff;
 										int blue  = flat_data[scrIndex +2 ] & 0xff;
 										destData[destIndex] = (red<<16) + (green<<8) + blue;
 									}
@@ -549,7 +633,8 @@ public class ilastik_import extends JFrame implements PlugIn, ActionListener {
 	{
 		if (event.getActionCommand().equals("load")) 
 		{
-			lookupWindow();
+//			lookupWindow();
+			dimensionWindow(); 
 		}
 		else if (event.getActionCommand().equals("cancel")) 
 		{
@@ -557,13 +642,30 @@ public class ilastik_import extends JFrame implements PlugIn, ActionListener {
 		}
 		else if (event.getActionCommand().equals("Load Raw"))
 		{
-			getData(isList, datasetList);
+			frame.dispose();
+//			dimensionWindow();
+			getData(datasetList, dimensionOrder);
 		}
 		else if (event.getActionCommand().equals("Load LUT"))
 		{
-			getData(isList, datasetList);
+			frame.dispose();
+//			dimensionWindow(); 
+			getData(datasetList, dimensionOrder);
 			IJ.run("3-3-2 RGB");
 		}
+		
+		if (event.getActionCommand().equals("load2")) 
+		{
+			dimensionOrder = (String) dimBox.getSelectedItem();
+			lookupWindow();
+//			getData(datasetList, dimensionOrder);
+			frame2.dispose();
+		}
+		else if (event.getActionCommand().equals("cancel2")) 
+		{
+			frame2.dispose();
+		}
+
 	}
 
 	/**
@@ -581,15 +683,7 @@ public class ilastik_import extends JFrame implements PlugIn, ActionListener {
 		String pluginsDir = url.substring("file:".length(), url.length() - clazz.getName().length() - ".class".length());
 		System.setProperty("plugins.dir", pluginsDir);
 
-		// start ImageJ
 		new ImageJ();
-
-		// open the Clown sample
-		//		ImagePlus image = IJ.openImage("/Users/jmassa/Documents/MaMut_project/drosophila/ilastik_export/Raw_Data_0_10.tif");
-		//		ImagePlus image = IJ.openImage("/Users/jmassa/Documents/MaMut_project/rapoport/raw.tif");
-		//		image.show();
-
-		// run the plugin
-		//IJ.runPlugIn(clazz.getName(), "");
 	}
+
 }

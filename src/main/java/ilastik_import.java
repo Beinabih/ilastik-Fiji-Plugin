@@ -273,6 +273,12 @@ public class ilastik_import extends JFrame implements PlugIn, ActionListener {
 	
 	public void dimensionWindow(){
 		
+		String path;
+		String boxInfo;
+		int rank = 0;
+		String[] dimExamples = new String[20];;
+
+		
 		frame2 = new JFrame();
 		
 		JButton k1 = new JButton("Load");
@@ -282,12 +288,34 @@ public class ilastik_import extends JFrame implements PlugIn, ActionListener {
 		k2.setActionCommand("cancel2");
 		k2.addActionListener(this);
 		
-		String[] dimExamples = {
-		         "txyzc",
-		         "xyzc",
-		         "xyc",
-		};
+		if (this.isList){
+			boxInfo = (String)dataSetBox.getSelectedItem();
+			String[] parts = boxInfo.split(":");
+			path = parts[1].replaceAll("\\s+","");
+//			IJ.log(boxInfo);
+		}
+		else{
+			path = datasetList.get(0);
+//			IJ.log(path);
+		}
+		HDF5DataSetInformation dsInfo = reader.object().getDataSetInformation(path);
+		rank = dsInfo.getRank();
 		
+		if (rank == 5){
+			dimExamples[0] = "txyzc";}
+		else if (rank == 4){
+			dimExamples[0] = "xyzc";
+			dimExamples[1] = "txyz";
+			dimExamples[2] = "txyc";
+		}
+		else if (rank == 3){
+			dimExamples[0] = "xyc";
+			dimExamples[1] = "xyz";
+			
+		}
+		else{
+			dimExamples[0] = "xy";}
+			
 		this.dimBox = new JComboBox(dimExamples);
 		dimBox.setEditable(true);
 		dimBox.addActionListener(this);
@@ -323,7 +351,7 @@ public class ilastik_import extends JFrame implements PlugIn, ActionListener {
 			boxInfo = (String)dataSetBox.getSelectedItem();
 			String[] parts = boxInfo.split(":");
 			path = parts[1].replaceAll("\\s+","");
-			IJ.log(boxInfo);
+//			IJ.log(boxInfo);
 		}
 		else{
 			path = datasetList.get(0);
@@ -335,15 +363,13 @@ public class ilastik_import extends JFrame implements PlugIn, ActionListener {
 
 		HDF5DataSetInformation dsInfo = reader.object().getDataSetInformation(path);
 
-
 		if (imp == null) {
-			//	        	  get rank
-			rank = dsInfo.getRank();
+			//get rank
+//			rank = dsInfo.getRank();
 
-			//	              get type information
+			//get type information
 			String typeText = getInfo(dsInfo);
 			
-
 				nCols = 1;
 				nRows = 1;
 				nLevels = 1;
@@ -376,7 +402,6 @@ public class ilastik_import extends JFrame implements PlugIn, ActionListener {
 					
 				}
 				
-
 //			if (rank == 5) {
 //				nFrames = (int)dsInfo.getDimensions()[0];
 //				nCols = (int)dsInfo.getDimensions()[1];

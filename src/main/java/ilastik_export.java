@@ -68,7 +68,7 @@ public class ilastik_export implements PlugInFilter {
 
 
 		image = imp;
-		
+
 		return DOES_8G + DOES_8C + DOES_16 + DOES_32 + DOES_RGB + NO_CHANGES;
 	}
 
@@ -220,11 +220,13 @@ public class ilastik_export implements PlugInFilter {
 				System.arraycopy(flatArray, 0, flatArray2, 0, flatArray.length);
 				for (int t=0; t<nFrames; t++) {
 					for (int z=0; z<nLevs; z++) {
-						for (int y=0; y<nRows; y++) {
-							for (int x=0; x<nCols; x++) {
-								int scrIndex = x + y*nCols + z*nCols*nRows + t*nCols*nRows*nLevs;
-								int destIndex =  z + y*nLevs + x*nLevs*nRows + t*nLevs*nCols*nRows;
-								flatArray[destIndex] = flatArray2[scrIndex];
+						for (int c=0; c<nChannels; c++){
+							for (int y=0; y<nRows; y++) {
+								for (int x=0; x<nCols; x++) {
+									int scrIndex = x + y*nCols +c*nCols*nRows +z*nChannels*nCols*nRows + t*nChannels*nCols*nRows*nLevs;
+									int destIndex = c + z*nChannels + y*nLevs*nChannels + x*nLevs*nRows*nChannels + t*nLevs*nCols*nRows*nChannels;
+									flatArray[destIndex] = flatArray2[scrIndex];
+								}
 							}
 						}
 					}
@@ -273,16 +275,18 @@ public class ilastik_export implements PlugInFilter {
 				System.arraycopy(flatArray, 0, flatArray2, 0, flatArray.length);
 				for (int t=0; t<nFrames; t++) {
 					for (int z=0; z<nLevs; z++) {
-						for (int y=0; y<nRows; y++) {
-							for (int x=0; x<nCols; x++) {
-								int scrIndex = x + y*nCols + z*nCols*nRows + t*nCols*nRows*nLevs;
-								int destIndex =  z + y*nLevs + x*nLevs*nRows + t*nLevs*nCols*nRows;
-								flatArray[destIndex] = flatArray2[scrIndex];
+						for (int c=0; c<nChannels; c++){
+							for (int y=0; y<nRows; y++) {
+								for (int x=0; x<nCols; x++) {
+									int scrIndex = x + y*nCols +c*nCols*nRows +z*nChannels*nCols*nRows + t*nChannels*nCols*nRows*nLevs;
+									int destIndex = c + z*nChannels + y*nLevs*nChannels + x*nLevs*nRows*nChannels + t*nLevs*nCols*nRows*nChannels;
+									flatArray[destIndex] = flatArray2[scrIndex];
+								}
 							}
 						}
 					}
 				}
-				
+
 				try {
 					if ((file_id >= 0) && (dataspace_id >= 0))
 						dataset_id =  H5Dcreate(file_id, "exported_data", H5T_NATIVE_UINT16, dataspace_id,
@@ -300,7 +304,7 @@ public class ilastik_export implements PlugInFilter {
 				catch (Exception e) {
 					e.printStackTrace();
 				}
-				
+
 				IJ.log("write uint16 hdf5");
 				IJ.log("compressionLevel: " + String.valueOf(compressionLevel));
 				IJ.log("Done");
@@ -324,16 +328,17 @@ public class ilastik_export implements PlugInFilter {
 				System.arraycopy(flatArray, 0, flatArray2, 0, flatArray.length);
 				for (int t=0; t<nFrames; t++) {
 					for (int z=0; z<nLevs; z++) {
-						for (int y=0; y<nRows; y++) {
-							for (int x=0; x<nCols; x++) {
-								int scrIndex = x + y*nCols + z*nCols*nRows + t*nCols*nRows*nLevs;
-								int destIndex =  z + y*nLevs + x*nLevs*nRows + t*nLevs*nCols*nRows;
-								flatArray[destIndex] = flatArray2[scrIndex];
+						for (int c=0; c<nChannels; c++){
+							for (int y=0; y<nRows; y++) {
+								for (int x=0; x<nCols; x++) {
+									int scrIndex = x + y*nCols +c*nCols*nRows +z*nChannels*nCols*nRows + t*nChannels*nCols*nRows*nLevs;
+									int destIndex = c + z*nChannels + y*nLevs*nChannels + x*nLevs*nRows*nChannels + t*nLevs*nCols*nRows*nChannels;
+									flatArray[destIndex] = flatArray2[scrIndex];
+								}
 							}
 						}
 					}
 				}
-				
 				try {
 					if ((file_id >= 0) && (dataspace_id >= 0))
 						dataset_id =  H5Dcreate(file_id, "exported_data", H5T_NATIVE_FLOAT, dataspace_id,
@@ -366,7 +371,7 @@ public class ilastik_export implements PlugInFilter {
 					channelDimsRGB[2] = nRows; //y
 					channelDimsRGB[3] = nLevs ; //z
 					channelDimsRGB[4] = 3;
-					
+
 				} 
 				else 
 				{
@@ -378,7 +383,7 @@ public class ilastik_export implements PlugInFilter {
 					channelDimsRGB[4] = 3;
 
 				}
-				
+
 				try {
 					dataspace_id_color = H5Screate_simple(5, channelDimsRGB, null);
 				}
@@ -417,7 +422,7 @@ public class ilastik_export implements PlugInFilter {
 						}	
 					}
 				}
-				
+
 				try {
 					if ((file_id >= 0) && (dataspace_id_color >= 0))
 						dataset_id =  H5Dcreate(file_id, "exported_data", H5T_NATIVE_UINT8, dataspace_id_color,
@@ -434,14 +439,14 @@ public class ilastik_export implements PlugInFilter {
 				catch (Exception e) {
 					e.printStackTrace();
 				}
-				
+
 				IJ.log("write uint8 RGB HDF5");
 				IJ.log("compressionLevel: " + String.valueOf(compressionLevel));
 				IJ.log("Done");
 
 			}
 			else {
-			      IJ.error("Type Not handled yet!");
+				IJ.error("Type Not handled yet!");
 			}
 
 			try {
@@ -521,14 +526,6 @@ public class ilastik_export implements PlugInFilter {
 		// start ImageJ
 		new ImageJ();
 
-//				ImagePlus image = IJ.openImage("/Users/jmassa/Documents/ilastik/datasets/3D_LargeWhirl.tif");
-//				ImagePlus image = IJ.openImage("/Users/jmassa/Documents/MaMut_project/rapoport/raw.tif");
-		//		ImagePlus image = IJ.openImage("/Users/jmassa/Documents/MaMut_project/drosophila/ilastik_export/Raw_Data_0_10.tif");
-		//		ImagePlus image = IJ.openImage("/Users/chaubold/hci/data/virginie/Number3/MI_Substack (1-170).tif");
-		//		ImagePlus image = IJ.openImage("/Users/jmassa/Documents/workspace/plugin_test/droso.h5");
-		//		image.show();
 
-		// run the plugin
-		//IJ.runPlugIn(clazz.getName(), "");
 	}
 }

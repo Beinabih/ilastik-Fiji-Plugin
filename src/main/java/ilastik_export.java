@@ -138,10 +138,10 @@ public class ilastik_export implements PlugInFilter {
 		int nCols     = image.getWidth();
 		int slizeSize = nRows*nCols;
 
-//		long[] count = new long[5];
-//		long[] start = { 0,0,0,0,0};
-//		long[] block = new long[5];
-//		long[] stride = new long[5];
+		//		long[] count = new long[5];
+		//		long[] start = { 0,0,0,0,0};
+		//		long[] block = new long[5];
+		//		long[] stride = new long[5];
 		long scrIndex_p1 = 0;
 		long destIndex_p1 = 0;
 
@@ -199,7 +199,7 @@ public class ilastik_export implements PlugInFilter {
 				channel_Dims[2] = nRows; //y
 				channel_Dims[3] = 1 ;
 				channel_Dims[4] = nChannels;
-				
+
 				half_Dims = new long[5];
 				half_Dims[0] = Math.round(nFrames/2);
 				half_Dims[1] = nCols; //x
@@ -207,14 +207,14 @@ public class ilastik_export implements PlugInFilter {
 				half_Dims[3] = 1; //z
 				half_Dims[4] = nChannels;
 			}
-			
+
 			long[] iniDims = new long[5];
 			iniDims[0] = 1;
 			iniDims[1] = nCols;
 			iniDims[2] = nRows;
 			iniDims[3] = 1;
 			iniDims[4] = 1;
-			
+
 			long[] color_iniDims = new long[5];
 			color_iniDims[0] = 1;
 			color_iniDims[1] = nCols;
@@ -271,7 +271,7 @@ public class ilastik_export implements PlugInFilter {
 
 				int timestep = 0;
 				int z_axis = 0;
-	
+
 				try {
 					if ((file_id >= 0) && (dataspace_id >= 0))
 						dataset_id =  H5Dcreate(file_id, "exported_data", H5T_NATIVE_UINT8, dataspace_id,
@@ -280,23 +280,25 @@ public class ilastik_export implements PlugInFilter {
 				catch (Exception e) {
 					e.printStackTrace();
 				}
-				
-				
+
+
+				IJ.log(String.valueOf(stack.getSize()));
+
 				for (int i=1; i<=stack.getSize();i++){ // stack size: levels*t 500
-					
+
 					pixels = (byte[]) stack.getPixels(i);
 					byte[] pixels_target = new byte[pixels.length];
-					
-				
+
+
 					for (int y=0; y<nRows; y++){
 						for(int x=0; x<nCols; x++){
 							pixels_target[y + x*(nRows)] = pixels[x + y*(nCols)];
 						}
 					}
-			
-					
+
+
 					if (i== 1){
-					
+
 						try {
 							if (dataset_id >= 0) 
 								H5Dwrite(dataset_id, H5T_NATIVE_UINT8, H5S_ALL, H5S_ALL,
@@ -305,24 +307,28 @@ public class ilastik_export implements PlugInFilter {
 						catch (Exception e) {
 							e.printStackTrace();
 						}
-						
-				        try {
-				        	if (dataspace_id >= 0)
-				        		H5Sclose(dataspace_id);
-				        }
-				        catch (Exception e) {
-				            e.printStackTrace();
-				        }
-						z_axis += 1;
+
+						try {
+							if (dataspace_id >= 0)
+								H5Sclose(dataspace_id);
+						}
+						catch (Exception e) {
+							e.printStackTrace();
+						}
+
+						if (nLevs>1){
+							z_axis += 1;
+						}
+
 					}
 					else{
-						
+
 						if (i==2){
-							
-							
+
+
 							long[] extdims = new long[5];
 							extdims = channel_Dims ;
-							
+
 							try {
 								if (dataset_id >= 0)
 									H5Dset_extent(dataset_id, extdims);
@@ -332,18 +338,20 @@ public class ilastik_export implements PlugInFilter {
 							}
 
 						}
-						
+
 						try {
 							if (dataspace_id >= 0) {
-								
+
 								dataspace_id = H5Dget_space(dataset_id);
 
+//								IJ.log(String.valueOf(i) + " " + String.valueOf(timestep) + " " +String.valueOf(z_axis) );
+
 								long[] start = {timestep,0,0,z_axis,0};
-														
+
 								H5Sselect_hyperslab(dataspace_id, HDF5Constants.H5S_SELECT_SET, start, null, iniDims, null);
-								
+
 								memspace = H5Screate_simple(5, iniDims, null);
-								
+
 								if (dataset_id >= 0)
 									H5Dwrite(dataset_id, H5T_NATIVE_UINT8, memspace, dataspace_id,
 											H5P_DEFAULT, pixels_target);
@@ -352,13 +360,16 @@ public class ilastik_export implements PlugInFilter {
 						catch (Exception e) {
 							e.printStackTrace();
 						}
-						
-						z_axis += 1;
-											
-						if ((i % (nLevs*nChannels))==0){
-							timestep += 1;
-							z_axis = 0;
-						}
+
+
+
+					}
+
+					z_axis += 1;
+
+					if ((i % (nLevs*nChannels))==0){
+						timestep += 1;
+						z_axis = 0;
 					}
 				}
 
@@ -377,7 +388,7 @@ public class ilastik_export implements PlugInFilter {
 
 				int timestep = 0;
 				int z_axis = 0;
-	
+
 				try {
 					if ((file_id >= 0) && (dataspace_id >= 0))
 						dataset_id =  H5Dcreate(file_id, "exported_data", H5T_NATIVE_UINT16, dataspace_id,
@@ -390,17 +401,17 @@ public class ilastik_export implements PlugInFilter {
 				for (int i=1;i<=stack.getSize();i++){
 					pixels = (short[]) stack.getPixels(i);
 					short[] pixels_target = new short[pixels.length];
-					
-				
+
+
 					for (int y=0; y<nRows; y++){
 						for(int x=0; x<nCols; x++){
 							pixels_target[y + x*(nRows)] = pixels[x + y*(nCols)];
 						}
 					}
-			
-					
+
+
 					if (i== 1){
-						
+
 						try {
 							if (dataset_id >= 0) 
 								H5Dwrite(dataset_id, H5T_NATIVE_UINT16, H5S_ALL, H5S_ALL,
@@ -409,24 +420,26 @@ public class ilastik_export implements PlugInFilter {
 						catch (Exception e) {
 							e.printStackTrace();
 						}
-						
-				        try {
-				        	if (dataspace_id >= 0)
-				        		H5Sclose(dataspace_id);
-				        }
-				        catch (Exception e) {
-				            e.printStackTrace();
-				        }
-						z_axis += 1;
+
+						try {
+							if (dataspace_id >= 0)
+								H5Sclose(dataspace_id);
+						}
+						catch (Exception e) {
+							e.printStackTrace();
+						}
+						if (nLevs>1){
+							z_axis += 1;
+						}
 					}
 					else{
-						
+
 						if (i==2){
-							
-							
+
+
 							long[] extdims = new long[5];
 							extdims = channel_Dims ;
-							
+
 							try {
 								if (dataset_id >= 0)
 									H5Dset_extent(dataset_id, extdims);
@@ -436,18 +449,18 @@ public class ilastik_export implements PlugInFilter {
 							}
 
 						}
-						
+
 						try {
 							if (dataspace_id >= 0) {
-								
+
 								dataspace_id = H5Dget_space(dataset_id);
 
 								long[] start = {timestep,0,0,z_axis,0};
-														
+
 								H5Sselect_hyperslab(dataspace_id, HDF5Constants.H5S_SELECT_SET, start, null, iniDims, null);
-								
+
 								memspace = H5Screate_simple(5, iniDims, null);
-								
+
 								if (dataset_id >= 0)
 									H5Dwrite(dataset_id, H5T_NATIVE_UINT16, memspace, dataspace_id,
 											H5P_DEFAULT, pixels_target);
@@ -456,13 +469,14 @@ public class ilastik_export implements PlugInFilter {
 						catch (Exception e) {
 							e.printStackTrace();
 						}
-						
-						z_axis += 1;
-											
-						if ((i % (nLevs*nChannels))==0){
-							timestep += 1;
-							z_axis = 0;
-						}
+
+					}
+					
+					z_axis += 1;
+
+					if ((i % (nLevs*nChannels))==0){
+						timestep += 1;
+						z_axis = 0;
 					}
 				}
 
@@ -479,7 +493,7 @@ public class ilastik_export implements PlugInFilter {
 
 				int timestep = 0;
 				int z_axis = 0;
-	
+
 				try {
 					if ((file_id >= 0) && (dataspace_id >= 0))
 						dataset_id =  H5Dcreate(file_id, "exported_data", H5T_NATIVE_FLOAT, dataspace_id,
@@ -488,22 +502,22 @@ public class ilastik_export implements PlugInFilter {
 				catch (Exception e) {
 					e.printStackTrace();
 				}
-				
+
 				for (int i=1;i<=stack.getSize();i++){
 					pixels = (float[]) stack.getPixels(i);
 					float[] pixels_target = new float[pixels.length];
-					
-					
+
+
 					for (int y=0; y<nRows; y++){
 						for(int x=0; x<nCols; x++){
 							pixels_target[y + x*(nRows)] = pixels[x + y*(nCols)];
 						}
 					}
-			
-					
+
+
 					if (i== 1){
-					
-						
+
+
 						try {
 							if (dataset_id >= 0) 
 								H5Dwrite(dataset_id, H5T_NATIVE_FLOAT, H5S_ALL, H5S_ALL,
@@ -512,24 +526,26 @@ public class ilastik_export implements PlugInFilter {
 						catch (Exception e) {
 							e.printStackTrace();
 						}
-						
-				        try {
-				        	if (dataspace_id >= 0)
-				        		H5Sclose(dataspace_id);
-				        }
-				        catch (Exception e) {
-				            e.printStackTrace();
-				        }
-						z_axis += 1;
+
+						try {
+							if (dataspace_id >= 0)
+								H5Sclose(dataspace_id);
+						}
+						catch (Exception e) {
+							e.printStackTrace();
+						}
+						if (nLevs>1){
+							z_axis += 1;
+						}
 					}
 					else{
-						
+
 						if (i==2){
-							
-							
+
+
 							long[] extdims = new long[5];
 							extdims = channel_Dims ;
-							
+
 							try {
 								if (dataset_id >= 0)
 									H5Dset_extent(dataset_id, extdims);
@@ -539,18 +555,18 @@ public class ilastik_export implements PlugInFilter {
 							}
 
 						}
-						
+
 						try {
 							if (dataspace_id >= 0) {
-								
+
 								dataspace_id = H5Dget_space(dataset_id);
 
 								long[] start = {timestep,0,0,z_axis,0};
-														
+
 								H5Sselect_hyperslab(dataspace_id, HDF5Constants.H5S_SELECT_SET, start, null, iniDims, null);
-								
+
 								memspace = H5Screate_simple(5, iniDims, null);
-								
+
 								if (dataset_id >= 0)
 									H5Dwrite(dataset_id, H5T_NATIVE_FLOAT, memspace, dataspace_id,
 											H5P_DEFAULT, pixels_target);
@@ -559,13 +575,13 @@ public class ilastik_export implements PlugInFilter {
 						catch (Exception e) {
 							e.printStackTrace();
 						}
-						
-						z_axis += 1;
-											
-						if ((i % (nLevs*nChannels))==0){
-							timestep += 1;
-							z_axis = 0;
+
 						}
+					z_axis += 1;
+
+					if ((i % (nLevs*nChannels))==0){
+						timestep += 1;
+						z_axis = 0;
 					}
 				}
 
@@ -605,7 +621,7 @@ public class ilastik_export implements PlugInFilter {
 				}
 
 				stack = image.getStack();
-	
+
 				try {
 					if ((file_id >= 0) && (dataspace_id >= 0))
 						dataset_id =  H5Dcreate(file_id, "exported_data", H5T_NATIVE_UINT8, dataspace_id_color,
@@ -614,38 +630,38 @@ public class ilastik_export implements PlugInFilter {
 				catch (Exception e) {
 					e.printStackTrace();
 				}
-				
+
 				for (int t=0; t<=nFrames; t++){
 					for (int z=0; z<nLevs; z++) {
-					
-					int stackIndex = image.getStackIndex(1, z + 1, t + 1);
-					ColorProcessor cp = (ColorProcessor)(stack.getProcessor(stackIndex));
-					byte[] red   = cp.getChannel(1);
-					byte[] green = cp.getChannel(2);
-					byte[] blue  = cp.getChannel(3);
-					
-					byte[][] color_target = new byte[3][red.length];
-					
-					for (int y=0; y<nRows; y++){
-						for(int x=0; x<nCols; x++){
-							color_target[0][y + x*(nRows)] = red[x + y*(nCols)];
-							color_target[2][y + x*(nRows)] = blue[x + y*(nCols)];
-							color_target[1][y + x*(nRows)] = green[x + y*(nCols)];
+
+						int stackIndex = image.getStackIndex(1, z + 1, t + 1);
+						ColorProcessor cp = (ColorProcessor)(stack.getProcessor(stackIndex));
+						byte[] red   = cp.getChannel(1);
+						byte[] green = cp.getChannel(2);
+						byte[] blue  = cp.getChannel(3);
+
+						byte[][] color_target = new byte[3][red.length];
+
+						for (int y=0; y<nRows; y++){
+							for(int x=0; x<nCols; x++){
+								color_target[0][y + x*(nRows)] = red[x + y*(nCols)];
+								color_target[2][y + x*(nRows)] = blue[x + y*(nCols)];
+								color_target[1][y + x*(nRows)] = green[x + y*(nCols)];
+							}
 						}
-					}
-			
-				
-				        try {
-				        	if (dataspace_id >= 0)
-				        		H5Sclose(dataspace_id_color);
-				        }
-				        catch (Exception e) {
-				            e.printStackTrace();
-				        }
-						
+
+
+						try {
+							if (dataspace_id >= 0)
+								H5Sclose(dataspace_id_color);
+						}
+						catch (Exception e) {
+							e.printStackTrace();
+						}
+
 						if (z==0 ){
-						
-							
+
+
 							try {
 								if (dataset_id >= 0)
 									H5Dset_extent(dataset_id, channelDimsRGB);
@@ -655,20 +671,22 @@ public class ilastik_export implements PlugInFilter {
 							}
 
 						}
-						
+
 						for (int c=0; c<3; c++){
-						
+
 							try {
 								if (dataspace_id >= 0) {
-									
+
 									dataspace_id = H5Dget_space(dataset_id);
-	
+
 									long[] start = {t,0,0,z,c};
-															
-									H5Sselect_hyperslab(dataspace_id, HDF5Constants.H5S_SELECT_SET, start, null, iniDims, null);
-									
+									long[] iniDims2 = {0,nCols,nRows,0,c};
+
+
+									H5Sselect_hyperslab(dataspace_id, HDF5Constants.H5S_SELECT_SET, start, null, iniDims2, null);
+
 									memspace = H5Screate_simple(5, iniDims, null);
-									
+
 									if (dataset_id >= 0)
 										H5Dwrite(dataset_id, H5T_NATIVE_UINT8, memspace, dataspace_id,
 												H5P_DEFAULT, color_target[c]);
@@ -677,12 +695,12 @@ public class ilastik_export implements PlugInFilter {
 							catch (Exception e) {
 								e.printStackTrace();
 							}
-						
+
 						}
-						
+
 					}
 				}
-					
+
 				IJ.log("write uint8 RGB HDF5");
 				IJ.log("compressionLevel: " + String.valueOf(compressionLevel));
 				IJ.log("Done");

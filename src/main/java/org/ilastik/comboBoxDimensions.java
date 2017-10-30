@@ -1,3 +1,5 @@
+package org.ilastik;
+
 
 public class comboBoxDimensions {
 	

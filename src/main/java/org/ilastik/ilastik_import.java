@@ -1,3 +1,5 @@
+package org.ilastik;
+
 import java.awt.BorderLayout;
 import java.awt.GridBagLayout;
 import java.awt.event.ActionEvent;
@@ -357,9 +359,6 @@ public class ilastik_import extends JFrame implements PlugIn, ActionListener {
 			path = datasetList.get(0);
 //			IJ.log(path);
 		}
-		
-//		IJ.log(path);
-//		IJ.log(String.valueOf(isList));
 
 		HDF5DataSetInformation dsInfo = reader.object().getDataSetInformation(path);
 

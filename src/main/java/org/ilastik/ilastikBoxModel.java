@@ -1,3 +1,5 @@
+package org.ilastik;
+
 import java.util.Vector;
 import javax.swing.MutableComboBoxModel;
 import javax.swing.event.ListDataListener;

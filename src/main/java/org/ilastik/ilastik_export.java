@@ -1,3 +1,5 @@
+package org.ilastik;
+
 import ncsa.hdf.hdf5lib.exceptions.HDF5Exception;
 
 import ij.IJ;
@@ -8,7 +10,6 @@ import ij.gui.GenericDialog;
 import ij.io.SaveDialog;
 import ij.plugin.filter.PlugInFilter;
 import ij.process.ImageProcessor;
-import org.ilastik.IlastikHDF5Exporter;
 
 /**
  * ilastik export

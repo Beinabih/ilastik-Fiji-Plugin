@@ -2,8 +2,6 @@ package org.ilastik.bdvextension;
 
 import net.imglib2.img.basictypeaccess.volatiles.array.VolatileFloatArray;
 import bdv.img.cache.CacheArrayLoader;
-import bdv.img.hdf5.Util;
-import ij.IJ;
 
 public class IlastikVolatileFloatArrayLoader implements CacheArrayLoader< VolatileFloatArray >
 {
@@ -25,7 +23,6 @@ public class IlastikVolatileFloatArrayLoader implements CacheArrayLoader< Volati
 		return new VolatileFloatArray( array, true );
 	}
 
-	@Override
 	public VolatileFloatArray emptyArray( final int[] dimensions )
 	{
 		int numEntities = 1;

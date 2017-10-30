@@ -22,7 +22,6 @@ public class IlastikVolatileShortArrayLoader implements CacheArrayLoader< Volati
 		return new VolatileShortArray( array, true );
 	}
 
-	@Override
 	public VolatileShortArray emptyArray( final int[] dimensions )
 	{
 		int numEntities = 1;

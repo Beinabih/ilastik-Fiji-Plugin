@@ -7,29 +7,26 @@ import org.ilastik.bdvextension.DataTypes.DataType;
 import bdv.AbstractViewerSetupImgLoader;
 import bdv.ViewerImgLoader;
 import bdv.ViewerSetupImgLoader;
-import bdv.cache.CacheHints;
-import bdv.cache.LoadingStrategy;
 import bdv.img.cache.CacheArrayLoader;
-import bdv.img.cache.CachedCellImg;
 import bdv.img.cache.VolatileGlobalCellCache;
-import bdv.img.cache.VolatileImgCells;
-import bdv.img.cache.VolatileImgCells.CellCache;
 import bdv.img.hdf5.DimsAndExistence;
 import bdv.img.hdf5.Hdf5ImageLoader;
-import bdv.img.hdf5.Util;
 import ch.systemsx.cisd.hdf5.HDF5Factory;
 import ch.systemsx.cisd.hdf5.IHDF5Reader;
-import ij.IJ;
 import mpicbg.spim.data.generic.sequence.ImgLoaderHint;
 import net.imglib2.RandomAccessibleInterval;
 import net.imglib2.Volatile;
+import net.imglib2.cache.img.CachedCellImg;
+import net.imglib2.cache.volatiles.CacheHints;
+import net.imglib2.cache.volatiles.LoadingStrategy;
 import net.imglib2.img.NativeImg;
 import net.imglib2.img.basictypeaccess.volatiles.VolatileAccess;
+import net.imglib2.img.cell.AbstractCellImg;
+import net.imglib2.img.cell.CellGrid;
 import net.imglib2.realtransform.AffineTransform3D;
 import net.imglib2.type.NativeType;
 import net.imglib2.type.numeric.ARGBType;
 import net.imglib2.type.volatiles.VolatileARGBType;
-import net.imglib2.util.Fraction;
 
 public class Hdf5IlastikImageLoader<T extends NativeType< T >, V extends Volatile< T > & NativeType< V > , A extends VolatileAccess> extends AbstractViewerSetupImgLoader< T, V> implements ViewerImgLoader
 {
@@ -95,19 +92,18 @@ public class Hdf5IlastikImageLoader<T extends NativeType< T >, V extends Volatil
 	 * The created image needs a {@link NativeImg#setLinkedType(net.imglib2.type.Type) linked type} before it can be used.
 	 * The type should be either {@link ARGBType} and {@link VolatileARGBType}.
 	 */
-	protected < T extends NativeType< T > > CachedCellImg< T, A > prepareCachedImage(
+	protected < T extends NativeType< T > > AbstractCellImg< T, A, ?, ? > prepareCachedImage(
 			final int timepointId,
 			final int setupId,
 			final int level,
-			final LoadingStrategy loadingStrategy )
+			final LoadingStrategy loadingStrategy,
+            final T type)
 	{
 		final long[] dimensions = imageDimensions;
 		final int priority = numScales - 1 - level;
 		final CacheHints cacheHints = new CacheHints( loadingStrategy, priority, false );
-		final CellCache< A > c = cache.new VolatileCellCache<>( timepointId, setupId, level, cacheHints, this.loader );
-		final VolatileImgCells< A > cells = new VolatileImgCells<>( c, new Fraction(), dimensions, this.blockDimensions );
-		final CachedCellImg< T, A > img = new CachedCellImg<>( cells );
-		return img;
+        final CellGrid grid = new CellGrid( dimensions, this.blockDimensions );
+        return cache.createImg(grid, timepointId, setupId, level, cacheHints, this.loader, type);
 	}
 
 	@Override
@@ -125,19 +121,13 @@ public class Hdf5IlastikImageLoader<T extends NativeType< T >, V extends Volatil
 	@Override
 	public RandomAccessibleInterval< T > getImage( final int timepointId, final int level, final ImgLoaderHint... hints )
 	{
-		final CachedCellImg< T, A >  img = prepareCachedImage( timepointId, 0, level, LoadingStrategy.BLOCKING );
-		final T linkedType = dataType.createLinkedType(img);
-		img.setLinkedType( linkedType );
-		return img;
+        return prepareCachedImage(timepointId, 0, level, LoadingStrategy.BLOCKING, dataType.getType());
 	}
 
 	@Override
 	public RandomAccessibleInterval< V > getVolatileImage( final int timepointId, final int level, final ImgLoaderHint... hints )
 	{
-		final CachedCellImg< V, A >  img = prepareCachedImage( timepointId, 0, level, LoadingStrategy.VOLATILE );
-		final V linkedType = dataType.createLinkedVolatileType(img);
-		img.setLinkedType( linkedType );
-		return img;
+        return prepareCachedImage(timepointId, 0, level, LoadingStrategy.VOLATILE, dataType.getVolatileType());
 	}
 
 	public void setCache( final VolatileGlobalCellCache cache )

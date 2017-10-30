@@ -22,7 +22,6 @@ public class IlastikVolatileByteArrayLoader implements CacheArrayLoader< Volatil
 		return new VolatileByteArray( array, true );
 	}
 
-	@Override
 	public VolatileByteArray emptyArray( final int[] dimensions )
 	{
 		int numEntities = 1;

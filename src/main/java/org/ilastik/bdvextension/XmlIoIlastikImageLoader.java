@@ -29,8 +29,6 @@
  */
 package org.ilastik.bdvextension;
 
-import static mpicbg.spim.data.XmlHelpers.loadPath;
-
 import java.io.File;
 import java.io.IOException;
 
@@ -47,7 +45,6 @@ import mpicbg.spim.data.generic.sequence.AbstractSequenceDescription;
 import mpicbg.spim.data.generic.sequence.ImgLoaderIo;
 import mpicbg.spim.data.generic.sequence.XmlIoBasicImgLoader;
 
-@SuppressWarnings( { "rawtypes", "unchecked" } ) // TODO: when ij2 supports java 7, replace SuppressWarnings by new ImarisImageLoader<>(...)
 @ImgLoaderIo( format = "ilastik.hdf5", type = Hdf5IlastikImageLoader.class )
 public class XmlIoIlastikImageLoader implements XmlIoBasicImgLoader< Hdf5IlastikImageLoader >
 {
@@ -91,7 +88,7 @@ public class XmlIoIlastikImageLoader implements XmlIoBasicImgLoader< Hdf5Ilastik
 	@Override
 	public Hdf5IlastikImageLoader fromXml( final Element elem, final File basePath, final AbstractSequenceDescription< ?, ?, ? > sequenceDescription )
 	{
-		final String path = loadPath( elem, "hdf5", basePath ).toString();
+		final String path = XmlHelpers.loadPath( elem, "hdf5", basePath ).toString();
 		final String dataset = XmlHelpers.getText(elem, "dataset");
 		try{
 			DataTypes.DataType<?,?,?> dataType = determineDatasetDatatype(new File( path ), dataset);

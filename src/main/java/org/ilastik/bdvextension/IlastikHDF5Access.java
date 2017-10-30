@@ -29,7 +29,7 @@
  */
 package org.ilastik.bdvextension;
 
-import static bdv.img.hdf5.Util.reorder;
+import bdv.img.hdf5.Util;
 
 import bdv.img.hdf5.DimsAndExistence;
 import bdv.img.hdf5.Util;
@@ -95,7 +95,7 @@ class IlastikHDF5Access implements IIlastikHDF5Access
 		if ( all5Dimensions != null )
 		{
 			long[] dimensions = new long[]{all5Dimensions[1], all5Dimensions[2], all5Dimensions[3]};
-			return new DimsAndExistence(reorder(dimensions), true );//reorder
+			return new DimsAndExistence(Util.reorder(dimensions), true );//reorder
 		}
 		else
 			return new DimsAndExistence( new long[] { 1, 1, 1 }, false );

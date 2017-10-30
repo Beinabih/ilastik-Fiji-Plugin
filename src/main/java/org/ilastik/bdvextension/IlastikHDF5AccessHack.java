@@ -1,20 +1,8 @@
 package org.ilastik.bdvextension;
 
-import static bdv.img.hdf5.Util.reorder;
-import static ch.systemsx.cisd.hdf5.hdf5lib.H5D.H5Dclose;
-import static ch.systemsx.cisd.hdf5.hdf5lib.H5D.H5Dget_space;
-import static ch.systemsx.cisd.hdf5.hdf5lib.H5D.H5Dopen;
-import static ch.systemsx.cisd.hdf5.hdf5lib.H5D.H5Dread;
-import static ch.systemsx.cisd.hdf5.hdf5lib.H5S.H5Sclose;
-import static ch.systemsx.cisd.hdf5.hdf5lib.H5S.H5Screate_simple;
-import static ch.systemsx.cisd.hdf5.hdf5lib.H5S.H5Sget_simple_extent_dims;
-import static ch.systemsx.cisd.hdf5.hdf5lib.H5S.H5Sselect_hyperslab;
-import static ch.systemsx.cisd.hdf5.hdf5lib.HDF5Constants.H5P_DEFAULT;
-import static ch.systemsx.cisd.hdf5.hdf5lib.HDF5Constants.H5S_MAX_RANK;
-import static ch.systemsx.cisd.hdf5.hdf5lib.HDF5Constants.H5S_SELECT_SET;
-import static ch.systemsx.cisd.hdf5.hdf5lib.HDF5Constants.H5T_NATIVE_FLOAT;
-import static ch.systemsx.cisd.hdf5.hdf5lib.HDF5Constants.H5T_NATIVE_UCHAR;
-import static ch.systemsx.cisd.hdf5.hdf5lib.HDF5Constants.H5T_NATIVE_USHORT;
+import ch.systemsx.cisd.hdf5.hdf5lib.H5D;
+import ch.systemsx.cisd.hdf5.hdf5lib.H5S;
+import ch.systemsx.cisd.hdf5.hdf5lib.HDF5Constants;
 
 import java.lang.reflect.Field;
 
@@ -59,14 +47,14 @@ class IlastikHDF5AccessHack implements IIlastikHDF5Access
 
 		public OpenDataSet( final String datasetName )
 		{
-			dataSetId = H5Dopen( fileId, datasetName, H5P_DEFAULT );
-			fileSpaceId = H5Dget_space( dataSetId );
+			dataSetId = H5D.H5Dopen( fileId, datasetName, HDF5Constants.H5P_DEFAULT );
+			fileSpaceId = H5D.H5Dget_space( dataSetId );
 		}
 
 		public void close()
 		{
-			H5Sclose( fileSpaceId );
-			H5Dclose( dataSetId );
+			H5S.H5Sclose( fileSpaceId );
+			H5D.H5Dclose( dataSetId );
 		}
 	}
 	
@@ -115,9 +103,9 @@ class IlastikHDF5AccessHack implements IIlastikHDF5Access
 		final long[] realDimensions = new long[ 5 ];
 		try
 		{
-			final long[] dimensions = new long[ H5S_MAX_RANK ];
-			final long[] maxDimensions = new long[ H5S_MAX_RANK ];
-			final int rank = H5Sget_simple_extent_dims( openDataSet.fileSpaceId, dimensions, maxDimensions );
+			final long[] dimensions = new long[ HDF5Constants.H5S_MAX_RANK ];
+			final long[] maxDimensions = new long[ HDF5Constants.H5S_MAX_RANK ];
+			final int rank = H5S.H5Sget_simple_extent_dims( openDataSet.fileSpaceId, dimensions, maxDimensions );
 			if(rank != 5)
 			{
 				IJ.log("Found wrong number of axes: " + String.valueOf(rank));
@@ -159,7 +147,7 @@ class IlastikHDF5AccessHack implements IIlastikHDF5Access
 		if ( all5Dimensions != null )
 		{
 			long[] dimensions = new long[]{all5Dimensions[1], all5Dimensions[2], all5Dimensions[3]};
-			return new DimsAndExistence(reorder(dimensions), true ); 
+			return new DimsAndExistence(Util.reorder(dimensions), true ); 
 		}
 		else
 			return new DimsAndExistence( new long[] { 1, 1, 1 }, false );
@@ -183,10 +171,10 @@ class IlastikHDF5AccessHack implements IIlastikHDF5Access
 		long[] useDims = get5DimsFrom3Dims(reorderedDimensions);
 		long[] useMins = get5DMinsFrom3Mins(reorderedMin, timepoint, setup);
 
-		final int memorySpaceId = H5Screate_simple( useDims.length, useDims, null );
-		H5Sselect_hyperslab( openDataSet.fileSpaceId, H5S_SELECT_SET, useMins, null, useDims, null );
-		H5Dread( openDataSet.dataSetId, H5T_NATIVE_USHORT, memorySpaceId, openDataSet.fileSpaceId, numericConversionXferPropertyListID, dataBlock );
-		H5Sclose( memorySpaceId );
+		final int memorySpaceId = H5S.H5Screate_simple( useDims.length, useDims, null );
+		H5S.H5Sselect_hyperslab( openDataSet.fileSpaceId, HDF5Constants.H5S_SELECT_SET, useMins, null, useDims, null );
+		H5D.H5Dread( openDataSet.dataSetId, HDF5Constants.H5T_NATIVE_USHORT, memorySpaceId, openDataSet.fileSpaceId, numericConversionXferPropertyListID, dataBlock );
+		H5S.H5Sclose( memorySpaceId );
 
 		return dataBlock;
 	}
@@ -220,10 +208,10 @@ class IlastikHDF5AccessHack implements IIlastikHDF5Access
 		long[] useDims = get5DimsFrom3Dims(reorderedDimensions);
 		long[] useMins = get5DMinsFrom3Mins(reorderedMin, timepoint, setup);
 
-		final int memorySpaceId = H5Screate_simple( useDims.length, useDims, null );
-		H5Sselect_hyperslab( openDataSet.fileSpaceId, H5S_SELECT_SET, useMins, null, useDims, null );
-		H5Dread( openDataSet.dataSetId, H5T_NATIVE_UCHAR, memorySpaceId, openDataSet.fileSpaceId, numericConversionXferPropertyListID, dataBlock );
-		H5Sclose( memorySpaceId );
+		final int memorySpaceId = H5S.H5Screate_simple( useDims.length, useDims, null );
+		H5S.H5Sselect_hyperslab( openDataSet.fileSpaceId, HDF5Constants.H5S_SELECT_SET, useMins, null, useDims, null );
+		H5D.H5Dread( openDataSet.dataSetId, HDF5Constants.H5T_NATIVE_UCHAR, memorySpaceId, openDataSet.fileSpaceId, numericConversionXferPropertyListID, dataBlock );
+		H5S.H5Sclose( memorySpaceId );
 
 		return dataBlock;
 	}
@@ -244,10 +232,10 @@ class IlastikHDF5AccessHack implements IIlastikHDF5Access
 		long[] useDims = get5DimsFrom3Dims(reorderedDimensions);
 		long[] useMins = get5DMinsFrom3Mins(reorderedMin, timepoint, setup);
 
-		final int memorySpaceId = H5Screate_simple( useDims.length, useDims, null );
-		H5Sselect_hyperslab( openDataSet.fileSpaceId, H5S_SELECT_SET, useMins, null, useDims, null );
-		H5Dread( openDataSet.dataSetId, H5T_NATIVE_FLOAT, memorySpaceId, openDataSet.fileSpaceId, numericConversionXferPropertyListID, dataBlock );
-		H5Sclose( memorySpaceId );
+		final int memorySpaceId = H5S.H5Screate_simple( useDims.length, useDims, null );
+		H5S.H5Sselect_hyperslab( openDataSet.fileSpaceId, HDF5Constants.H5S_SELECT_SET, useMins, null, useDims, null );
+		H5D.H5Dread( openDataSet.dataSetId, HDF5Constants.H5T_NATIVE_FLOAT, memorySpaceId, openDataSet.fileSpaceId, numericConversionXferPropertyListID, dataBlock );
+		H5S.H5Sclose( memorySpaceId );
 
 		return dataBlock;
 	}

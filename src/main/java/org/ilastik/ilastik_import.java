@@ -1,49 +1,33 @@
 package org.ilastik;
 
 import java.awt.BorderLayout;
-import java.awt.GridBagLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Vector;
 
 import javax.swing.JButton;
 import javax.swing.JComboBox;
 import javax.swing.JFrame;
-import javax.swing.JTable;
-import javax.swing.table.DefaultTableModel;
 
 import ncsa.hdf.hdf5lib.exceptions.HDF5Exception;
-import ch.systemsx.cisd.base.mdarray.MDAbstractArray;
 import ch.systemsx.cisd.base.mdarray.MDByteArray;
 import ch.systemsx.cisd.base.mdarray.MDFloatArray;
 import ch.systemsx.cisd.base.mdarray.MDIntArray;
-import ch.systemsx.cisd.base.mdarray.MDLongArray;
 import ch.systemsx.cisd.base.mdarray.MDShortArray;
 import ch.systemsx.cisd.hdf5.HDF5DataSetInformation;
 import ch.systemsx.cisd.hdf5.HDF5DataTypeInformation;
 import ch.systemsx.cisd.hdf5.HDF5Factory;
-import ch.systemsx.cisd.hdf5.HDF5FloatStorageFeatures;
-import ch.systemsx.cisd.hdf5.HDF5IntStorageFeatures;
 import ch.systemsx.cisd.hdf5.HDF5LinkInformation;
 import ch.systemsx.cisd.hdf5.IHDF5Reader;
-import ch.systemsx.cisd.hdf5.IHDF5ReaderConfigurator;
-import ch.systemsx.cisd.hdf5.IHDF5Writer;
-import ch.systemsx.cisd.hdf5.UnsignedIntUtils;
 import ij.IJ;
 import ij.ImageJ;
 import ij.ImagePlus;
 import ij.ImageStack;
-import ij.Prefs;
-import ij.gui.GenericDialog;
 import ij.io.OpenDialog;
-import ij.io.SaveDialog;
-import ij.plugin.filter.PlugInFilter;
 import ij.process.ImageProcessor;
 import ij.plugin.*;
-import java.util.Vector;
 import javax.swing.*;
 
 /**
